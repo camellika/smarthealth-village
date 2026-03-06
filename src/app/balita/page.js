@@ -133,7 +133,7 @@ export default function BalitaPage() {
 
       <table border="1" cellPadding="8">
         <thead>
-          <tr>
+          <tr className="bg-red-100">
             <th>ID</th>
             <th>NIK</th>
             <th>Nama</th>

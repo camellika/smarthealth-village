@@ -72,4 +72,3 @@ export async function login(data) {
     lansiaId: user.lansiaId
   };
 }
-//g3ehwj5e
