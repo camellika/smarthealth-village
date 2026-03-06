@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
+model User {
+  id        Int     @id @default(autoincrement())
+  username  String  @unique
+  password  String
+  role      String  // admin / user
+
+  balitaId  Int?    @unique
+  lansiaId  Int?    @unique
+
+  balita    Balita? @relation(fields: [balitaId], references: [id])
+  lansia    Lansia? @relation(fields: [lansiaId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// BALITA
+//////////////////////////////////////////////////////
+model Balita {
+  id        Int      @id @default(autoincrement())
+  nik       String   @unique
+  nama      String
+  namaIbu   String
+  alamat    String
+  noTelp    String?
+  tglLahir  DateTime
+
+  user      User?
+  riwayat   PosyanduBalita[]
+}
+
+//////////////////////////////////////////////////////
+// LANSIA
+//////////////////////////////////////////////////////
+model Lansia {
+  id        Int      @id @default(autoincrement())
+  nik       String   @unique
+  nama      String
+  alamat    String
+  noTelp    String?
+  tglLahir  DateTime
+
+  user      User?
+  riwayat   PosyanduLansia[]
+}
+
+//////////////////////////////////////////////////////
+// POSYANDU BALITA(RIWAYAT PEMERIKSAAN)
+//////////////////////////////////////////////////////
+model PosyanduBalita {
+  id            Int      @id @default(autoincrement())
+  kegiatan      String
+  tanggal       DateTime
+
+  bb            Float?   // Berat Badan (kg)
+  tb            Float?   // Tinggi Badan (cm)
+  lingkarKepala Float?   // cm
+  lingkarLengan Float?   // cm
+
+  balitaId Int
+  balita    Balita @relation(fields: [balitaId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+
+//////////////////////////////////////////////////////
+// POSYANDU LANSIA
+//////////////////////////////////////////////////////
+
+model PosyanduLansia {
+  id            Int      @id @default(autoincrement())
+  kegiatan      String
+  tanggal       DateTime
+
+  bb            Float?   // Berat Badan (kg)
+  tb            Float?   // Tinggi Badan (cm)
+  lingkarPerut  Float?   // cm
+  tensi         Float?   
+  gulaDarah     Float?
+
+  lansiaId     Int
+  lansia        Lansia   @relation(fields: [lansiaId], references: [id])
+
+  createdAt     DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// PENJADWALAN
+//////////////////////////////////////////////////////
+model Penjadwalan {
+  id       Int      @id @default(autoincrement())
+  kegiatan String
+  tanggal  DateTime
+  tempat   String
+
+  createdAt DateTime @default(now())
+
+
+}
+
