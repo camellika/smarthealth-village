@@ -8,10 +8,13 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     username: "",
     password: "",
-    role: "user"
+    confirmPassword: "",
+    balitaId: "",
+    lansiaId: ""
   });
 
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   const handleChange = (e) => {
     setForm({
@@ -23,81 +26,101 @@ export default function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setError("");
+    setSuccess("");
+
+    // validasi password
+    if (form.password !== form.confirmPassword) {
+      setError("Password dan ulangi password harus sama");
+      return;
+    }
+
     try {
+      await register({
+        username: form.username,
+        password: form.password,
+        balitaId: form.balitaId || null,
+        lansiaId: form.lansiaId || null
+      });
 
-      await register(form);
-
-      setMessage("Register berhasil!");
+      setSuccess("Registrasi berhasil");
 
       setForm({
         username: "",
         password: "",
-        role: "user"
+        confirmPassword: "",
+        balitaId: "",
+        lansiaId: ""
       });
 
-    } catch (error) {
-      setMessage(error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
 
   return (
-    <div style={{ padding: "40px" }}>
+    <div style={{ padding: "20px", maxWidth: "400px" }}>
+      <h1>Registrasi User</h1>
 
-      <h2>Register User</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {success && <p style={{ color: "green" }}>{success}</p>}
 
       <form onSubmit={handleSubmit}>
 
-        <div>
-          <label>Username</label>
-          <br />
-          <input
-            type="text"
-            name="username"
-            value={form.username}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <input
+          type="text"
+          name="username"
+          placeholder="Username"
+          value={form.username}
+          onChange={handleChange}
+          required
+        />
+        <br /><br />
 
-        <br />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={form.password}
+          onChange={handleChange}
+          required
+        />
+        <br /><br />
 
-        <div>
-          <label>Password</label>
-          <br />
-          <input
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        {/* ULANGI PASSWORD */}
+        <input
+          type="password"
+          name="confirmPassword"
+          placeholder="Ulangi Password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          required
+        />
+        <br /><br />
 
-        <br />
+        <input
+          type="number"
+          name="balitaId"
+          placeholder="Balita ID (opsional)"
+          value={form.balitaId}
+          onChange={handleChange}
+        />
+        <br /><br />
 
-        <div>
-          <label>Role</label>
-          <br />
-          <select
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-          >
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-
-        <br />
+        <input
+          type="number"
+          name="lansiaId"
+          placeholder="Lansia ID (opsional)"
+          value={form.lansiaId}
+          onChange={handleChange}
+        />
+        <br /><br />
 
         <button type="submit">
-          Register
+          Registrasi
         </button>
 
       </form>
-
-      <p>{message}</p>
-
     </div>
   );
 }

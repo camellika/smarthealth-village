@@ -43,14 +43,21 @@ export async function deletePenjadwalan(id) {
   });
 }
 export async function getJadwalTerdekat() {
+
+  const now = new Date();
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(now.getDate() - 7);
+
   return await prisma.penjadwalan.findMany({
     where: {
       tanggal: {
-        gte: new Date()
+        gte: oneWeekAgo
       }
     },
     orderBy: {
       tanggal: "asc"
     }
   });
+
 }

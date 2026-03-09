@@ -42,11 +42,34 @@ export async function updateLansia(id, data) {
   });
 }
 
+
 export async function deleteLansia(id) {
+  // Konfirmasi manual di UI sudah dilakukan
+
+  // 1. Hapus riwayat posyandu lansia terkait
+  await prisma.posyanduLansia.deleteMany({
+    where: { lansiaId: Number(id) }
+  });
+
+  // 2. Hapus user yang terhubung ke lansia ini
+  await prisma.user.deleteMany({
+    where: { lansiaId: Number(id) }
+  });
+
+  // 3. Hapus lansia jika masih ada
+  const exists = await prisma.lansia.findUnique({
+    where: { id: Number(id) }
+  });
+
+  if (!exists) {
+    throw new Error("Data lansia sudah tidak ada atau gagal ditemukan.");
+  }
+
   return await prisma.lansia.delete({
     where: { id: Number(id) }
   });
 }
+
 
 export async function getLansiaByNik(nik) {
   return await prisma.lansia.findUnique({

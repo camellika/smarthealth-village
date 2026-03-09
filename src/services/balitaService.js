@@ -45,6 +45,14 @@ export async function updateBalita(id, data) {
 }
 
 export async function deleteBalita(id) {
+  // Hapus data posyandu balita yang terkait dulu
+  await prisma.posyanduBalita.deleteMany({
+    where: {
+      balitaId: Number(id)
+    }
+  });
+
+  // Baru hapus balita
   return await prisma.balita.delete({
     where: { id: Number(id) }
   });
