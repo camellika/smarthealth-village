@@ -1,126 +1,212 @@
 "use client";
 
 import { useState } from "react";
-import { register } from "@/services/authService";
+import { useRouter } from "next/navigation";
+import { registerUser, searchBalitaByNik } from "@/services/authService";
 
 export default function RegisterPage() {
 
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    confirmPassword: "",
-    balitaId: "",
-    lansiaId: ""
-  });
+  const router = useRouter();
+
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [nik, setNik] = useState("");
+  const [namaBalita, setNamaBalita] = useState("");
+
+  const [balitaId, setBalitaId] = useState(null);
+
+  const [results, setResults] = useState([]);
 
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value
-    });
+  // =========================
+  // SEARCH NIK
+  // =========================
+
+  const handleSearchNik = async (value) => {
+
+    setNik(value);
+    setNamaBalita("");
+    setBalitaId(null);
+
+    if (value.length < 3) {
+      setResults([]);
+      return;
+    }
+
+    const data = await searchBalitaByNik(value);
+    setResults(data || []);
   };
 
+  // =========================
+  // PILIH BALITA
+  // =========================
+
+  const handleSelectBalita = (balita) => {
+
+    setNik(balita.nik || "");
+    setNamaBalita(balita.nama || "");
+    setBalitaId(balita.id || null);
+
+    setResults([]);
+  };
+
+  // =========================
+  // REGISTER
+  // =========================
+
   const handleSubmit = async (e) => {
+
     e.preventDefault();
-
     setError("");
-    setSuccess("");
 
-    // validasi password
-    if (form.password !== form.confirmPassword) {
-      setError("Password dan ulangi password harus sama");
+    if (password !== confirmPassword) {
+      setError("Password tidak sama");
+      return;
+    }
+
+    if (!balitaId) {
+      setError("Silakan pilih NIK dari daftar");
       return;
     }
 
     try {
-      await register({
-        username: form.username,
-        password: form.password,
-        balitaId: form.balitaId || null,
-        lansiaId: form.lansiaId || null
+
+      await registerUser({
+        username,
+        password,
+        nik
       });
 
-      setSuccess("Registrasi berhasil");
+      alert("Registrasi berhasil");
 
-      setForm({
-        username: "",
-        password: "",
-        confirmPassword: "",
-        balitaId: "",
-        lansiaId: ""
-      });
+      router.push("/login");
 
     } catch (err) {
       setError(err.message);
     }
+
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "400px" }}>
-      <h1>Registrasi User</h1>
 
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
+    <div style={{
+      maxWidth: "400px",
+      margin: "50px auto",
+      padding: "30px",
+      border: "1px solid #ddd",
+      borderRadius: "10px"
+    }}>
+
+      <h2>Register User</h2>
+
+      {error && (
+        <p style={{ color: "red" }}>{error}</p>
+      )}
 
       <form onSubmit={handleSubmit}>
 
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        {/* USERNAME */}
+        <div>
+          <label>Username</label>
+          <input
+            type="text"
+            value={username || ""}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        {/* PASSWORD */}
+        <div>
+          <label>Password</label>
+          <input
+            type="password"
+            value={password || ""}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
 
         {/* ULANGI PASSWORD */}
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Ulangi Password"
-          value={form.confirmPassword}
-          onChange={handleChange}
-          required
-        />
-        <br /><br />
+        <div>
+          <label>Ulangi Password</label>
+          <input
+            type="password"
+            value={confirmPassword || ""}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
 
-        <input
-          type="number"
-          name="balitaId"
-          placeholder="Balita ID (opsional)"
-          value={form.balitaId}
-          onChange={handleChange}
-        />
-        <br /><br />
+        {/* INPUT NIK */}
+        <div style={{ position: "relative" }}>
+          <label>NIK Balita</label>
 
-        <input
-          type="number"
-          name="lansiaId"
-          placeholder="Lansia ID (opsional)"
-          value={form.lansiaId}
-          onChange={handleChange}
-        />
-        <br /><br />
+          <input
+            type="text"
+            value={nik || ""}
+            onChange={(e) => handleSearchNik(e.target.value)}
+            placeholder="Ketik minimal 3 digit"
+            required
+          />
+
+          {/* DROPDOWN */}
+          {results.length > 0 && (
+
+            <ul style={{
+              border: "1px solid #ccc",
+              listStyle: "none",
+              padding: "0",
+              margin: "0",
+              position: "absolute",
+              width: "100%",
+              background: "white",
+              maxHeight: "150px",
+              overflowY: "auto"
+            }}>
+
+              {results.map((item) => (
+                <li
+                  key={item.id}
+                  onClick={() => handleSelectBalita(item)}
+                  style={{
+                    padding: "8px",
+                    cursor: "pointer"
+                  }}
+                >
+                  {item.nik} - {item.nama}
+                </li>
+              ))}
+
+            </ul>
+
+          )}
+
+        </div>
+
+        {/* NAMA BALITA */}
+        <div>
+          <label>Nama Balita</label>
+          <input
+            type="text"
+            value={namaBalita || ""}
+            readOnly
+          />
+        </div>
+
+        <br />
 
         <button type="submit">
-          Registrasi
+          Register
         </button>
 
       </form>
+
     </div>
+
   );
+
 }
