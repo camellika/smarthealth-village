@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerUser, searchBalitaByNik } from "@/services/authService";
+import { registerUser, searchPendudukByNik } from "@/services/authService";
 
 export default function RegisterPage() {
 
@@ -21,24 +21,28 @@ export default function RegisterPage() {
 
   const [error, setError] = useState("");
 
+  const [lansiaId, setLansiaId] = useState(null);
+
   // =========================
   // SEARCH NIK
   // =========================
 
   const handleSearchNik = async (value) => {
 
-    setNik(value);
-    setNamaBalita("");
-    setBalitaId(null);
+  setNik(value);
+  setNamaBalita("");
+  setBalitaId(null);
+  setLansiaId(null);
 
-    if (value.length < 3) {
-      setResults([]);
-      return;
-    }
+  if (value.length < 3) {
+    setResults([]);
+    return;
+  }
 
-    const data = await searchBalitaByNik(value);
-    setResults(data || []);
-  };
+  const data = await searchPendudukByNik(value);
+  setResults(data || []);
+
+};
 
   // =========================
   // PILIH BALITA

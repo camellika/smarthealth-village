@@ -8,16 +8,17 @@ import {
 } from "lucide-react";
 
 const NAV_BALITA = [
-  { href: "/admin/balita",           label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/admin/balita/data",      label: "Data Balita",       icon: Baby },
-  { href: "/admin/balita/posyandu",  label: "Posyandu & Jadwal", icon: CalendarDays },
-  { href: "/admin/balita/laporan",   label: "Laporan",           icon: FileText },
+  { href: "/admin/balita/data",     label: "Data Balita",       icon: Baby },
+  { href: "/admin/balita/posyandu", label: "Posyandu & Jadwal", icon: CalendarDays },
 ];
 
 const NAV_LANSIA = [
-  { href: "/admin/lansia",           label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/admin/lansia/data",          label: "Data Lansia",             icon: Users },
-  { href: "/admin/lansia/posyandu", label: "Posyandu & Jadwal Lansia", icon: CalendarDays },
+  { href: "/admin/lansia/data",     label: "Data Lansia",              icon: Users },
+  { href: "/admin/lansia/posyandu", label: "Penjadwalan", icon: CalendarDays },
+];
+
+const NAV_LAPORAN = [
+  { href: "/admin/laporan", label: "Laporan", icon: FileText },
 ];
 
 export default function BalitaLayout({ children }) {
@@ -87,38 +88,57 @@ export default function BalitaLayout({ children }) {
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Modul Balita & Lansia</p>
             </div>
           </div>
-          {/* Back to main */}
           <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 6, color: "#9aab9a", fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "5px 8px", borderRadius: 8, transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.color = "#2d7a4f"; e.currentTarget.style.background = "#f0f6f2"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#9aab9a"; e.currentTarget.style.background = ""; }}
           >
-            <ChevronLeft size={13} /> Kembali ke Dashboard Desa
+            
           </Link>
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
 
-          {/* — Balita Section — */}
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#b5ceba", letterSpacing: 1.5, textTransform: "uppercase", padding: "8px 6px 6px" }}>Menu Balita</p>
-          {NAV_BALITA.map(({ href, label, icon: Icon }) => {
-            const active =
-              href === "/admin/balita"
-                ? path === "/admin/balita"
-                : path.startsWith(href) && !path.startsWith("/admin/balita/lansia");
-            return (
-              <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`}>
-                <Icon size={16} /> {label}
-              </Link>
-            );
-          })}
+          {/* — Dashboard — */}
+          
+          <Link
+            href="/admin"
+            className={`nav-link ${path === "/admin" ? "active" : ""}`}
+          >
+            <LayoutDashboard size={16} /> Dashboard
+          </Link>
 
-          {/* Divider */}
-          <div style={{ height: 1, background: "#f0f6f2", margin: "10px 6px" }} />
+          {/* — Balita Section — */}
+          <Link
+            href="/admin/balita"
+            className={`nav-link ${path === "/admin/balita" || path.startsWith("/admin/balita/") ? "active" : ""}`}
+          >
+            <CalendarDays size={16} /> Balita
+          </Link>
+
+
 
           {/* — Lansia Section — */}
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#b5ceba", letterSpacing: 1.5, textTransform: "uppercase", padding: "0 6px 6px" }}>Menu Lansia</p>
-          {NAV_LANSIA.map(({ href, label, icon: Icon }) => {
+          <Link
+            href="/admin/lansia"
+            className={`nav-link ${path === "/admin/lansia" || path.startsWith("/admin/lansia/") ? "active" : ""}`}
+          >
+            <CalendarDays size={16} /> Lansia
+          </Link>
+
+
+          {/* — Penjadwalan Section — */}
+          <Link
+            href="/admin/penjadwalan"
+            className={`nav-link ${path === "/admin/penjadwalan" || path.startsWith("/admin/penjadwalan/") ? "active" : ""}`}
+          >
+            <CalendarDays size={16} /> Penjadwalan
+          </Link>
+
+
+
+          {/* — Laporan Section — */}
+          {NAV_LAPORAN.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
             return (
               <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`}>
@@ -154,15 +174,15 @@ export default function BalitaLayout({ children }) {
         <header style={{ background: "#fff", borderBottom: "1px solid #e4ede6", padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 30, flexShrink: 0 }}>
           <div>
             <p style={{ fontSize: 15, fontWeight: 800, color: "#1f2d1f" }}>
-              {
-                [...NAV_BALITA, ...NAV_LANSIA]
-                  .slice()
-                  .reverse()
-                  .find(n => path === n.href || (n.href !== "/admin/balita" && path.startsWith(n.href)))
-                  ?.label ?? "Modul Balita & Lansia"
+              {path === "/admin"
+                ? "Dashboard Utama"
+                : [...NAV_BALITA, ...NAV_LANSIA, ...NAV_LAPORAN]
+                    .slice()
+                    .reverse()
+                    .find(n => path === n.href || path.startsWith(n.href + "/"))
+                    ?.label ?? "Modul Balita & Lansia"
               }
             </p>
-            <p style={{ fontSize: 11, color: "#9aab9a" }}>Desa Ceria · Posyandu Mawar</p>
           </div>
           <button style={{ background: "#f5f7f4", border: "1px solid #e4ede6", borderRadius: 10, padding: "7px 9px", cursor: "pointer", display: "flex", position: "relative" }}>
             <Bell size={15} color="#6b7c6b" />

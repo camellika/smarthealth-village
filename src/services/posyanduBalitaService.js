@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 
+
 export async function getPosyanduBalita() {
   return await prisma.posyanduBalita.findMany({
     include: {

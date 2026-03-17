@@ -8,29 +8,21 @@ REGISTER USER
 */
 export async function registerUser(data) {
 
-  const balita = await prisma.balita.findUnique({
-    where: {
-      nik: data.nik
-    }
-  });
-
-  if (!balita) {
-    throw new Error("NIK balita tidak ditemukan");
-  }
-
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const user = await prisma.user.create({
     data: {
       username: data.username,
       password: hashedPassword,
-      role: "balita",
-      balitaId: balita.id
+      role: "user",
+      balitaId: data.balitaId || null,
+      lansiaId: data.lansiaId || null
     }
   });
 
   return user;
 }
+
 
 export async function register(data) {
 
@@ -157,4 +149,56 @@ export async function login(data) {
     balitaId: user.balitaId,
     lansiaId: user.lansiaId
   };
+}
+
+
+/*
+SEARCH BALITA + LANSIA
+*/
+
+export async function searchPendudukByNik(nik) {
+
+  if (!nik || nik.length < 3) return [];
+
+  const balita = await prisma.balita.findMany({
+    where: {
+      nik: {
+        contains: nik,
+        mode: "insensitive"
+      }
+    },
+    select: {
+      id: true,
+      nik: true,
+      nama: true
+    },
+    take: 5
+  });
+
+  const lansia = await prisma.lansia.findMany({
+    where: {
+      nik: {
+        contains: nik,
+        mode: "insensitive"
+      }
+    },
+    select: {
+      id: true,
+      nik: true,
+      nama: true
+    },
+    take: 5
+  });
+
+  return [
+    ...balita.map((b) => ({
+      ...b,
+      tipe: "balita"
+    })),
+    ...lansia.map((l) => ({
+      ...l,
+      tipe: "lansia"
+    }))
+  ];
+
 }
