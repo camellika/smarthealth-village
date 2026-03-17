@@ -4,14 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   HeartPulse, LayoutDashboard, Baby, FileText,
-  CalendarDays, LogOut, Bell, ChevronLeft
+  CalendarDays, LogOut, Bell, ChevronLeft, Users
 } from "lucide-react";
 
-const NAV = [
-  { href: "/balita",           label: "Dashboard",        icon: LayoutDashboard },
-  { href: "/balita/data",      label: "Data Balita",       icon: Baby },
-  { href: "/balita/posyandu",  label: "Posyandu & Jadwal", icon: CalendarDays },
-  { href: "/balita/laporan",   label: "Laporan",           icon: FileText },
+const NAV_BALITA = [
+  { href: "/admin/balita",           label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/admin/balita/data",      label: "Data Balita",       icon: Baby },
+  { href: "/admin/balita/posyandu",  label: "Posyandu & Jadwal", icon: CalendarDays },
+  { href: "/admin/balita/laporan",   label: "Laporan",           icon: FileText },
+];
+
+const NAV_LANSIA = [
+  { href: "/admin/lansia",           label: "Dashboard",        icon: LayoutDashboard },
+  { href: "/admin/lansia/data",          label: "Data Lansia",             icon: Users },
+  { href: "/admin/lansia/posyandu", label: "Posyandu & Jadwal Lansia", icon: CalendarDays },
 ];
 
 export default function BalitaLayout({ children }) {
@@ -68,7 +74,7 @@ export default function BalitaLayout({ children }) {
       `}</style>
 
       {/* ══ SIDEBAR ══ */}
-      <aside style={{ width: 232, background: "#fff", borderRight: "1px solid #e4ede6", display: "flex", flexDirection: "column", padding: "0 12px", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 40 }}>
+      <aside style={{ width: 232, background: "#fff", borderRight: "1px solid #e4ede6", display: "flex", flexDirection: "column", padding: "0 12px", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 40, overflowY: "auto" }}>
 
         {/* Logo */}
         <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8 }}>
@@ -78,11 +84,11 @@ export default function BalitaLayout({ children }) {
             </div>
             <div>
               <p style={{ fontWeight: 800, fontSize: 13, color: "#1f2d1f", lineHeight: 1.2 }}>SmartHealth<span style={{ color: "#2d7a4f" }}>Village</span></p>
-              <p style={{ fontSize: 10, color: "#9aab9a" }}>Modul Balita</p>
+              <p style={{ fontSize: 10, color: "#9aab9a" }}>Modul Balita & Lansia</p>
             </div>
           </div>
           {/* Back to main */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, color: "#9aab9a", fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "5px 8px", borderRadius: 8, transition: "all 0.15s" }}
+          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 6, color: "#9aab9a", fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "5px 8px", borderRadius: 8, transition: "all 0.15s" }}
             onMouseEnter={e => { e.currentTarget.style.color = "#2d7a4f"; e.currentTarget.style.background = "#f0f6f2"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#9aab9a"; e.currentTarget.style.background = ""; }}
           >
@@ -92,15 +98,35 @@ export default function BalitaLayout({ children }) {
 
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+
+          {/* — Balita Section — */}
           <p style={{ fontSize: 10, fontWeight: 700, color: "#b5ceba", letterSpacing: 1.5, textTransform: "uppercase", padding: "8px 6px 6px" }}>Menu Balita</p>
-          {NAV.map(({ href, label, icon: Icon }) => {
-            const active = path === href || (href !== "/balita" && path.startsWith(href));
+          {NAV_BALITA.map(({ href, label, icon: Icon }) => {
+            const active =
+              href === "/admin/balita"
+                ? path === "/admin/balita"
+                : path.startsWith(href) && !path.startsWith("/admin/balita/lansia");
             return (
               <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`}>
                 <Icon size={16} /> {label}
               </Link>
             );
           })}
+
+          {/* Divider */}
+          <div style={{ height: 1, background: "#f0f6f2", margin: "10px 6px" }} />
+
+          {/* — Lansia Section — */}
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#b5ceba", letterSpacing: 1.5, textTransform: "uppercase", padding: "0 6px 6px" }}>Menu Lansia</p>
+          {NAV_LANSIA.map(({ href, label, icon: Icon }) => {
+            const active = path === href || path.startsWith(href + "/");
+            return (
+              <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`}>
+                <Icon size={16} /> {label}
+              </Link>
+            );
+          })}
+
         </nav>
 
         {/* User + logout */}
@@ -112,7 +138,7 @@ export default function BalitaLayout({ children }) {
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Ceria</p>
             </div>
           </div>
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
+          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "#fecaca"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "#fee2e2"; }}
           >
@@ -128,7 +154,13 @@ export default function BalitaLayout({ children }) {
         <header style={{ background: "#fff", borderBottom: "1px solid #e4ede6", padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 30, flexShrink: 0 }}>
           <div>
             <p style={{ fontSize: 15, fontWeight: 800, color: "#1f2d1f" }}>
-              {NAV.find(n => n.href === path || (n.href !== "/balita" && path.startsWith(n.href)))?.label ?? "Modul Balita"}
+              {
+                [...NAV_BALITA, ...NAV_LANSIA]
+                  .slice()
+                  .reverse()
+                  .find(n => path === n.href || (n.href !== "/admin/balita" && path.startsWith(n.href)))
+                  ?.label ?? "Modul Balita & Lansia"
+              }
             </p>
             <p style={{ fontSize: 11, color: "#9aab9a" }}>Desa Ceria · Posyandu Mawar</p>
           </div>
