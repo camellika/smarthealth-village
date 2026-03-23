@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { getLansia, createLansia, updateLansia, deleteLansia } from "@/services/lansiaService";
 import { getPosyanduLansia, createPosyanduLansia, updatePosyanduLansia, deletePosyanduLansia } from "@/services/posyanduLansiaService";
+import { getJadwalTerdekat } from "@/services/penjadwalanService";
 import {
   Users, Plus, Search, ChevronDown, ChevronUp,
   AlertTriangle, Calendar, X, CreditCard,
@@ -198,24 +199,46 @@ function DeleteConfirmModal({ lansia, onClose, onConfirm, loading }) {
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving }) {
   const isEdit = !!editData;
-  const [pemForm, setPemForm] = useState(
+  const [pemForm, setPemForm]       = useState(
     isEdit
       ? { ...editData, tanggal: toInputDate(editData.tanggal) }
       : INIT_FORM_PEM
   );
-  const [pemErr, setPemErr] = useState({});
+  const [pemErr, setPemErr]         = useState({});
+  const [jadwalList, setJadwalList] = useState([]);
+  const [loadingJadwal, setLoadingJadwal] = useState(true);
 
+  /* ── load jadwal dari service penjadwalan ── */
+  useEffect(() => {
+    getJadwalTerdekat()
+      .then(setJadwalList)
+      .finally(() => setLoadingJadwal(false));
+  }, []);
+
+  /* ── saat pilih jadwal, otomatis isi tanggal ── */
   function handleChange(e) {
     const { name, value } = e.target;
-    setPemForm(p => ({ ...p, [name]: value }));
+
+    if (name === "kegiatan") {
+      /* cari jadwal yang dipilih lalu pre-fill tanggal */
+      const jadwalDipilih = jadwalList.find(j => j.kegiatan === value);
+      setPemForm(p => ({
+        ...p,
+        kegiatan: value,
+        tanggal: jadwalDipilih ? toInputDate(jadwalDipilih.tanggal) : p.tanggal,
+      }));
+    } else {
+      setPemForm(p => ({ ...p, [name]: value }));
+    }
+
     if (pemErr[name]) setPemErr(p => ({ ...p, [name]: "" }));
   }
 
   function validate() {
     const e = {};
-    if (!pemForm.lansiaId)         e.lansiaId  = "Pilih lansia";
-    if (!pemForm.kegiatan.trim())  e.kegiatan  = "Nama kegiatan wajib diisi";
-    if (!pemForm.tanggal)          e.tanggal   = "Tanggal wajib diisi";
+    if (!pemForm.lansiaId)        e.lansiaId = "Pilih lansia";
+    if (!pemForm.kegiatan.trim()) e.kegiatan = "Pilih kegiatan";
+    if (!pemForm.tanggal)         e.tanggal  = "Tanggal wajib diisi";
     return e;
   }
 
@@ -249,7 +272,45 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 14px" }}>
 
-            {/* Pilih lansia */}
+            {/* ── Pilih Kegiatan (dropdown dari jadwal) ── */}
+            <div style={{ gridColumn: "1/-1" }}>
+              <label className="label">Nama Kegiatan <span style={{ color: "#dc2626" }}>*</span></label>
+              <select
+                name="kegiatan"
+                value={pemForm.kegiatan}
+                onChange={handleChange}
+                disabled={loadingJadwal}
+                style={{
+                  width: "100%",
+                  border: `1.5px solid ${pemErr.kegiatan ? "#dc2626" : "#e4ede6"}`,
+                  borderRadius: 10,
+                  padding: "10px 12px",
+                  fontSize: 14,
+                  fontFamily: "'Plus Jakarta Sans',sans-serif",
+                  color: pemForm.kegiatan ? "#1f2d1f" : "#9aab9a",
+                  background: loadingJadwal ? "#f8fbf9" : "#fff",
+                  outline: "none",
+                  cursor: loadingJadwal ? "not-allowed" : "pointer",
+                }}
+              >
+                <option value="">
+                  {loadingJadwal ? "Memuat jadwal…" : "-- Pilih jadwal kegiatan --"}
+                </option>
+                {jadwalList.map(j => (
+                  <option key={j.id} value={j.kegiatan}>
+                    {j.kegiatan} · {new Date(j.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })} · {j.tempat}
+                  </option>
+                ))}
+              </select>
+              {pemErr.kegiatan && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.kegiatan}</p>}
+              {!loadingJadwal && jadwalList.length === 0 && (
+                <p style={{ color: "#9aab9a", fontSize: 11, marginTop: 4 }}>
+                  Belum ada jadwal kegiatan. Tambahkan jadwal terlebih dahulu.
+                </p>
+              )}
+            </div>
+
+            {/* ── Pilih Lansia ── */}
             <div style={{ gridColumn: "1/-1" }}>
               <label className="label">Nama Lansia <span style={{ color: "#dc2626" }}>*</span></label>
               <select name="lansiaId" value={pemForm.lansiaId} onChange={handleChange}
@@ -260,19 +321,25 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               {pemErr.lansiaId && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.lansiaId}</p>}
             </div>
 
-            {/* Nama kegiatan */}
+            {/* ── Tanggal Pemeriksaan (auto-fill dari jadwal, bisa diubah manual) ── */}
             <div style={{ gridColumn: "1/-1" }}>
-              <label className="label">Nama Kegiatan <span style={{ color: "#dc2626" }}>*</span></label>
-              <input name="kegiatan" value={pemForm.kegiatan} onChange={handleChange} placeholder="cth: Posyandu Lansia Maret 2026" className={`input-bare${pemErr.kegiatan ? " error" : ""}`} />
-              {pemErr.kegiatan && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.kegiatan}</p>}
-            </div>
-
-            {/* Tanggal */}
-            <div style={{ gridColumn: "1/-1" }}>
-              <label className="label">Tanggal Pemeriksaan <span style={{ color: "#dc2626" }}>*</span></label>
+              <label className="label">
+                Tanggal Pemeriksaan <span style={{ color: "#dc2626" }}>*</span>
+                {pemForm.kegiatan && (
+                  <span style={{ color: "#9aab9a", fontWeight: 400, marginLeft: 6, fontSize: 11 }}>
+                    (otomatis dari jadwal, bisa diubah)
+                  </span>
+                )}
+              </label>
               <div style={{ position: "relative" }}>
                 <Calendar size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="date" name="tanggal" value={pemForm.tanggal} onChange={handleChange} className={`input-field${pemErr.tanggal ? " error" : ""}`} />
+                <input
+                  type="date"
+                  name="tanggal"
+                  value={pemForm.tanggal}
+                  onChange={handleChange}
+                  className={`input-field${pemErr.tanggal ? " error" : ""}`}
+                />
               </div>
               {pemErr.tanggal && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.tanggal}</p>}
             </div>
@@ -357,14 +424,14 @@ export default function PosyanduLansiaPage() {
   const [toast, setToast]                 = useState(null);
 
   /* ── state pemeriksaan ── */
-  const [pemList, setPemList]         = useState([]);
-  const [loadingPem, setLoadingPem]   = useState(true);
-  const [showPemForm, setShowPemForm] = useState(false);
-  const [editPem, setEditPem]         = useState(null);
-  const [savingPem, setSavingPem]     = useState(false);
-  const [deletePemTarget, setDeletePemTarget] = useState(null);
-  const [deletingPem, setDeletingPem] = useState(false);
-  const [searchPem, setSearchPem]     = useState("");
+  const [pemList, setPemList]                   = useState([]);
+  const [loadingPem, setLoadingPem]             = useState(true);
+  const [showPemForm, setShowPemForm]           = useState(false);
+  const [editPem, setEditPem]                   = useState(null);
+  const [savingPem, setSavingPem]               = useState(false);
+  const [deletePemTarget, setDeletePemTarget]   = useState(null);
+  const [deletingPem, setDeletingPem]           = useState(false);
+  const [searchPem, setSearchPem]               = useState("");
 
   useEffect(() => { loadAll(); }, []);
 
@@ -532,7 +599,7 @@ export default function PosyanduLansiaPage() {
       {/* ── TAB BAR ── */}
       <div style={{ display: "flex", gap: 6, background: "#fff", border: "1px solid #e4ede6", borderRadius: 14, padding: 5, width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {[
-          { id: "data",        label: "Data Lansia",      icon: Users    },
+          { id: "data",        label: "Data Lansia",       icon: Users    },
           { id: "pemeriksaan", label: "Input Pemeriksaan", icon: Activity },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)} style={{
@@ -553,13 +620,11 @@ export default function PosyanduLansiaPage() {
       {/* ══════════ TAB DATA LANSIA ══════════ */}
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-
-          {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {[
-              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",       accent: "#2d7a4f", bg: "#e8f5ed" },
+              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#e8f5ed" },
               { icon: AlertTriangle, label: "Risiko Tinggi",  value: loadingLansia ? "–" : risikoTinggi, sub: "Tensi/gula darah tinggi", accent: "#be185d", bg: "#fce7f3" },
-              { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",  accent: "#d97706", bg: "#fef3c7" },
+              { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",   accent: "#d97706", bg: "#fef3c7" },
             ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
               <div key={label} className="stat-card">
                 <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent, borderRadius: "14px 0 0 14px" }} />
@@ -573,7 +638,6 @@ export default function PosyanduLansiaPage() {
             ))}
           </div>
 
-          {/* Table card */}
           <div style={{ background: "#fff", border: "1px solid #e4ede6", borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div>
@@ -674,7 +738,6 @@ export default function PosyanduLansiaPage() {
       {/* ══════════ TAB PEMERIKSAAN ══════════ */}
       {tab === "pemeriksaan" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-
           <div className="card" style={{ padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <div>
               <p className="section-title">Data Pemeriksaan Lansia</p>
@@ -716,7 +779,6 @@ export default function PosyanduLansiaPage() {
                   {!loadingPem && filteredPem.map((p, i) => {
                     const risikoTensi = p.tensi && p.tensi > 140;
                     const risikoGula  = p.gulaDarah && p.gulaDarah > 200;
-                    const status      = risikoTensi || risikoGula ? "risiko" : "normal";
                     return (
                       <tr key={p.id} className="tr-row">
                         <td style={{ padding: "12px 14px", color: "#9aab9a" }}>{i + 1}</td>
