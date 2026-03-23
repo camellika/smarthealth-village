@@ -14,6 +14,19 @@ export async function getPosyanduBalita() {
   });
 }
 
+export async function getPosyanduBalitaByBulan(tahun, bulan) {
+  return await prisma.posyanduBalita.findMany({
+    where: {
+      tanggal: {
+        gte: new Date(tahun, bulan - 1, 1),
+        lt:  new Date(tahun, bulan, 1),
+      }
+    },
+    include: { balita: true },
+    orderBy: { tanggal: "desc" }
+  });
+}
+
 export async function getPosyanduBalitaById(id) {
   return await prisma.posyanduBalita.findUnique({
     where: { id: Number(id) },

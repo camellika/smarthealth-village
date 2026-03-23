@@ -71,4 +71,19 @@ export async function getRiwayatLansia(lansiaId) {
       tanggal: "desc"
     }
   });
+
+
+}
+
+export async function getPosyanduLansiaByBulan(tahun, bulan) {
+  return await prisma.posyanduLansia.findMany({
+    where: {
+      tanggal: {
+        gte: new Date(tahun, bulan - 1, 1),
+        lt:  new Date(tahun, bulan, 1),
+      }
+    },
+    include: { lansia: true },
+    orderBy: { tanggal: "desc" }
+  });
 }
