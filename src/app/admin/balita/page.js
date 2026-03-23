@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { getBalita, createBalita, updateBalita, deleteBalita } from "@/services/balitaService";
 import {
+  getPosyanduBalita,
+  createPosyanduBalita,
+} from "@/services/posyanduBalitaService";
+import {
   Baby, Plus, Search, ChevronDown, ChevronUp,
   AlertTriangle, Calendar, X, CreditCard, User,
   Phone, MapPin, Save, Pencil, Trash2, Scale, Ruler
@@ -198,8 +202,8 @@ function DeleteConfirmModal({ balita, onClose, onConfirm, loading }) {
    MODAL FORM PEMERIKSAAN
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
-  const [pemForm, setPemForm]   = useState(PEMERIKSAAN_INIT);
-  const [pemErr, setPemErr]     = useState({});
+  const [pemForm, setPemForm]       = useState(PEMERIKSAAN_INIT);
+  const [pemErr, setPemErr]         = useState({});
   const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => {
@@ -326,27 +330,30 @@ export default function PosyanduPage() {
   const [tab, setTab] = useState("data"); // "data" | "pemeriksaan"
 
   /* ── state data balita ── */
-  const [balitaList, setBalitaList]     = useState([]);
+  const [balitaList, setBalitaList]       = useState([]);
   const [loadingBalita, setLoadingBalita] = useState(true);
-  const [showModal, setShowModal]       = useState(false);
-  const [editData, setEditData]         = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleting, setDeleting]         = useState(false);
-  const [searchBalita, setSearchBalita] = useState("");
-  const [sortField, setSortField]       = useState("nama");
-  const [sortAsc, setSortAsc]           = useState(true);
-  const [toast, setToast]               = useState(null);
+  const [showModal, setShowModal]         = useState(false);
+  const [editData, setEditData]           = useState(null);
+  const [deleteTarget, setDeleteTarget]   = useState(null);
+  const [deleting, setDeleting]           = useState(false);
+  const [searchBalita, setSearchBalita]   = useState("");
+  const [sortField, setSortField]         = useState("nama");
+  const [sortAsc, setSortAsc]             = useState(true);
+  const [toast, setToast]                 = useState(null);
 
   /* ── state pemeriksaan ── */
-  const [showPemForm, setShowPemForm] = useState(false);
-  const [savingPem, setSavingPem]     = useState(false);
-  const [searchPem, setSearchPem]     = useState("");
-  const [pemHistory, setPemHistory]   = useState([
-    { id: 1, balitaId: 1, namBalita: "Danessya Intan", tgl: "2026-03-10", bb: 11.2, tb: 83, lingkarKepala: 45, catatan: "Normal" },
-    { id: 2, balitaId: 2, namBalita: "Eka Firmani",    tgl: "2026-03-10", bb: 9.1,  tb: 75, lingkarKepala: 43, catatan: "BB kurang" },
-  ]);
+  const [showPemForm, setShowPemForm]   = useState(false);
+  const [savingPem, setSavingPem]       = useState(false);
+  const [searchPem, setSearchPem]       = useState("");
+  const [pemHistory, setPemHistory]     = useState([]);
+  const [loadingPem, setLoadingPem]     = useState(true);
 
   useEffect(() => { loadBalita(); }, []);
+
+  /* load pemeriksaan saat tab aktif */
+  useEffect(() => {
+    if (tab === "pemeriksaan") loadPemeriksaan();
+  }, [tab]);
 
   async function loadBalita() {
     setLoadingBalita(true);
@@ -357,6 +364,18 @@ export default function PosyanduPage() {
       showToast("Gagal memuat data balita", "error");
     } finally {
       setLoadingBalita(false);
+    }
+  }
+
+  async function loadPemeriksaan() {
+    setLoadingPem(true);
+    try {
+      const data = await getPosyanduBalita();
+      setPemHistory(data);
+    } catch {
+      showToast("Gagal memuat data pemeriksaan", "error");
+    } finally {
+      setLoadingPem(false);
     }
   }
 
@@ -394,19 +413,15 @@ export default function PosyanduPage() {
   async function handlePemSubmit(pemForm) {
     setSavingPem(true);
     try {
-      /* TODO: ganti dengan API createPemeriksaan */
-      const selected = balitaList.find(b => String(b.id) === String(pemForm.balitaId));
-      setPemHistory(prev => [{
-        id: Date.now(), balitaId: pemForm.balitaId,
-        namBalita: selected?.nama ?? "-",
-        tgl: new Date().toISOString().split("T")[0],
-        bb: parseFloat(pemForm.bb), tb: parseFloat(pemForm.tb),
-        lingkarKepala: pemForm.lingkarKepala ? parseFloat(pemForm.lingkarKepala) : null,
-        catatan: pemForm.catatan,
-      }, ...prev]);
+      await createPosyanduBalita(pemForm);
+      await loadPemeriksaan();
       setShowPemForm(false);
       showToast("Pemeriksaan berhasil disimpan");
-    } finally { setSavingPem(false); }
+    } catch {
+      showToast("Gagal menyimpan pemeriksaan", "error");
+    } finally {
+      setSavingPem(false);
+    }
   }
 
   /* ── computed ── */
@@ -434,8 +449,9 @@ export default function PosyanduPage() {
     return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
   }).length;
 
+  /* filter pemeriksaan: cocokan lewat relasi balita.nama */
   const filteredPem = pemHistory.filter(p =>
-    p.namBalita.toLowerCase().includes(searchPem.toLowerCase())
+    (p.balita?.nama ?? "").toLowerCase().includes(searchPem.toLowerCase())
   );
 
   return (
@@ -659,19 +675,27 @@ export default function PosyanduPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPem.length === 0 && (
+                  {loadingPem && (
+                    <tr><td colSpan={9} style={{ padding: "44px", textAlign: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "#9aab9a" }}>
+                        <div style={{ width: 18, height: 18, border: "2.5px solid #e4ede6", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+                        Memuat data…
+                      </div>
+                    </td></tr>
+                  )}
+                  {!loadingPem && filteredPem.length === 0 && (
                     <tr><td colSpan={9} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
                   )}
-                  {filteredPem.map((p, i) => {
-                    const statusBB = p.bb < 10 ? "kurang" : "normal";
+                  {!loadingPem && filteredPem.map((p, i) => {
+                    const statusBB = (p.bb ?? 0) < 10 ? "kurang" : "normal";
                     return (
                       <tr key={p.id} className="tr-row">
                         <td style={{ padding: "12px 14px", color: "#9aab9a" }}>{i + 1}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan || "-"}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.namBalita}</td>
-                        <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{formatDisplay(p.tgl)}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 700, color: statusBB === "kurang" ? "#d97706" : "#2d7a4f" }}>{p.bb}</td>
-                        <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.balita?.nama ?? "-"}</td>
+                        <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{formatDisplay(p.tanggal)}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: statusBB === "kurang" ? "#d97706" : "#2d7a4f" }}>{p.bb ?? "-"}</td>
+                        <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.catatan || "-"}</td>
                         <td style={{ padding: "12px 14px" }}>
@@ -687,7 +711,7 @@ export default function PosyanduPage() {
             </div>
           </div>
         </div>
-      )}  
+      )}
 
       {/* ── Modals ── */}
       {showModal && (

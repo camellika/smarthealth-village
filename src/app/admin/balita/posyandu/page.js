@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { getBalita } from "@/services/balitaService";
 import {
-  Scale, Ruler, Plus, Save, X, Search, User
+  getPosyanduBalita,
+  createPosyanduBalita,
+  deletePosyanduBalita,
+} from "@/services/posyanduBalitaService";
+import {
+  Scale, Ruler, Plus, Save, X, Search, Trash2
 } from "lucide-react";
 
 /* ── helpers ── */
@@ -26,23 +31,40 @@ const hitungUsia = (tgl) => {
   return `${Math.floor(bulan / 12)} th ${bulan % 12} bln`;
 };
 
-const PEMERIKSAAN_INIT = { balitaId: "", bb: "", tb: "", lingkarKepala: "", catatan: "" };
+const PEMERIKSAAN_INIT = {
+  balitaId: "",
+  kegiatan: "",
+  tanggal: new Date().toISOString().split("T")[0],
+  bb: "",
+  tb: "",
+  lingkarKepala: "",
+  lingkarLengan: "",
+  catatan: "",
+};
 
 export default function PosyanduPemeriksaanPage() {
-  const [balitaList, setBalitaList] = useState([]);
+  const [balitaList, setBalitaList]   = useState([]);
+  const [pemHistory, setPemHistory]   = useState([]);
   const [showPemForm, setShowPemForm] = useState(false);
   const [pemForm, setPemForm]         = useState(PEMERIKSAAN_INIT);
   const [pemErr, setPemErr]           = useState({});
   const [savingPem, setSavingPem]     = useState(false);
+  const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState("");
 
-  const [pemHistory, setPemHistory] = useState([
-    { id: 1, balitaId: 1, namBalita: "Danessya Intan", tgl: "2026-03-10", bb: 11.2, tb: 83, lingkarKepala: 45, catatan: "Normal" },
-    { id: 2, balitaId: 2, namBalita: "Eka Firmani",    tgl: "2026-03-10", bb: 9.1,  tb: 75, lingkarKepala: 43, catatan: "BB kurang" },
-  ]);
-
+  /* ── fetch data awal ── */
   useEffect(() => {
-    getBalita().then(setBalitaList);
+    async function fetchAll() {
+      setLoading(true);
+      try {
+        const [balita, pem] = await Promise.all([getBalita(), getPosyanduBalita()]);
+        setBalitaList(balita);
+        setPemHistory(pem);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchAll();
   }, []);
 
   function handlePemChange(e) {
@@ -54,6 +76,7 @@ export default function PosyanduPemeriksaanPage() {
   function validatePem() {
     const e = {};
     if (!pemForm.balitaId) e.balitaId = "Pilih balita";
+    if (!pemForm.tanggal)  e.tanggal  = "Tanggal wajib diisi";
     if (!pemForm.bb)       e.bb       = "Berat badan wajib diisi";
     if (!pemForm.tb)       e.tb       = "Tinggi badan wajib diisi";
     return e;
@@ -65,23 +88,36 @@ export default function PosyanduPemeriksaanPage() {
     if (Object.keys(errs).length) { setPemErr(errs); return; }
     setSavingPem(true);
     try {
-      /* TODO: ganti dengan API createPemeriksaan */
-      const selected = balitaList.find(b => String(b.id) === String(pemForm.balitaId));
-      setPemHistory(prev => [{
-        id: Date.now(), balitaId: pemForm.balitaId,
-        namBalita: selected?.nama ?? "-",
-        tgl: new Date().toISOString().split("T")[0],
-        bb: parseFloat(pemForm.bb), tb: parseFloat(pemForm.tb),
-        lingkarKepala: pemForm.lingkarKepala ? parseFloat(pemForm.lingkarKepala) : null,
-        catatan: pemForm.catatan,
-      }, ...prev]);
+      const created = await createPosyanduBalita({
+        balitaId:     pemForm.balitaId,
+        kegiatan:     pemForm.kegiatan,
+        tanggal:      pemForm.tanggal,
+        bb:           pemForm.bb,
+        tb:           pemForm.tb,
+        lingkarKepala: pemForm.lingkarKepala || null,
+        lingkarLengan: pemForm.lingkarLengan || null,
+      });
+
+      /* Re-fetch agar relasi balita ikut ter-include */
+      const fresh = await getPosyanduBalita();
+      setPemHistory(fresh);
+
       setPemForm(PEMERIKSAAN_INIT);
       setShowPemForm(false);
-    } finally { setSavingPem(false); }
+    } finally {
+      setSavingPem(false);
+    }
   }
 
+  async function handleDelete(id) {
+    if (!confirm("Hapus data pemeriksaan ini?")) return;
+    await deletePosyanduBalita(id);
+    setPemHistory(prev => prev.filter(p => p.id !== id));
+  }
+
+  /* ── filter ── */
   const filteredPem = pemHistory.filter(p =>
-    p.namBalita.toLowerCase().includes(search.toLowerCase())
+    (p.balita?.nama ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -110,30 +146,38 @@ export default function PosyanduPemeriksaanPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#f8fbf9" }}>
-                {["No","Nama Balita","Tgl Pemeriksaan","BB (kg)","TB (cm)","Lk. Kepala (cm)","Catatan","Status"].map(h => (
+                {["No","Nama Balita","Tgl Pemeriksaan","BB (kg)","TB (cm)","Lk. Kepala (cm)","Lk. Lengan (cm)","Status","Aksi"].map(h => (
                   <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 12, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filteredPem.length === 0 && (
-                <tr><td colSpan={8} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
+              {loading && (
+                <tr><td colSpan={9} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Memuat data…</td></tr>
               )}
-              {filteredPem.map((p, i) => {
+              {!loading && filteredPem.length === 0 && (
+                <tr><td colSpan={9} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
+              )}
+              {!loading && filteredPem.map((p, i) => {
                 const statusBB = p.bb < 10 ? "kurang" : "normal";
                 return (
                   <tr key={p.id} className="tr-row">
                     <td style={{ padding: "12px 14px", color: "#9aab9a" }}>{i + 1}</td>
-                    <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.namBalita}</td>
-                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{formatDisplay(p.tgl)}</td>
-                    <td style={{ padding: "12px 14px", fontWeight: 700, color: statusBB === "kurang" ? "#d97706" : "#2d7a4f" }}>{p.bb}</td>
-                    <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb}</td>
+                    <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.balita?.nama ?? "-"}</td>
+                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{formatDisplay(p.tanggal)}</td>
+                    <td style={{ padding: "12px 14px", fontWeight: 700, color: statusBB === "kurang" ? "#d97706" : "#2d7a4f" }}>{p.bb ?? "-"}</td>
+                    <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb ?? "-"}</td>
                     <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.catatan || "-"}</td>
+                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarLengan ?? "-"}</td>
                     <td style={{ padding: "12px 14px" }}>
                       <span className={statusBB === "kurang" ? "badge-yellow" : "badge-green"}>
                         {statusBB === "kurang" ? "BB Kurang" : "Normal"}
                       </span>
+                    </td>
+                    <td style={{ padding: "12px 14px" }}>
+                      <button onClick={() => handleDelete(p.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }} title="Hapus">
+                        <Trash2 size={14} color="#dc2626" />
+                      </button>
                     </td>
                   </tr>
                 );
@@ -158,6 +202,19 @@ export default function PosyanduPemeriksaanPage() {
               {pemErr.balitaId && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.balitaId}</p>}
             </div>
 
+            <div style={{ gridColumn: "1/-1" }}>
+              <label className="label">Tanggal Pemeriksaan <span style={{ color: "#dc2626" }}>*</span></label>
+              <input type="date" name="tanggal" value={pemForm.tanggal} onChange={handlePemChange}
+                className={`input-bare${pemErr.tanggal ? " error" : ""}`} />
+              {pemErr.tanggal && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.tanggal}</p>}
+            </div>
+
+            <div style={{ gridColumn: "1/-1" }}>
+              <label className="label">Kegiatan <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
+              <input type="text" name="kegiatan" value={pemForm.kegiatan} onChange={handlePemChange}
+                placeholder="cth: Posyandu Rutin Maret 2026" className="input-bare" />
+            </div>
+
             <div>
               <label className="label">Berat Badan (kg) <span style={{ color: "#dc2626" }}>*</span></label>
               <div style={{ position: "relative" }}>
@@ -176,15 +233,16 @@ export default function PosyanduPemeriksaanPage() {
               {pemErr.tb && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.tb}</p>}
             </div>
 
-            <div style={{ gridColumn: "1/-1" }}>
+            <div>
               <label className="label">Lingkar Kepala (cm) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <input type="number" step="0.1" min="0" name="lingkarKepala" value={pemForm.lingkarKepala} onChange={handlePemChange} placeholder="cth: 44" className="input-bare" />
             </div>
 
-            <div style={{ gridColumn: "1/-1" }}>
-              <label className="label">Catatan <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
-              <textarea name="catatan" value={pemForm.catatan} onChange={handlePemChange} placeholder="Catatan kondisi balita…" className="textarea-bare" />
+            <div>
+              <label className="label">Lingkar Lengan (cm) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
+              <input type="number" step="0.1" min="0" name="lingkarLengan" value={pemForm.lingkarLengan} onChange={handlePemChange} placeholder="cth: 14" className="input-bare" />
             </div>
+
           </div>
 
           <ModalFooter loading={savingPem} onClose={() => { setShowPemForm(false); setPemForm(PEMERIKSAAN_INIT); }} onSubmit={handlePemSubmit} submitLabel="Simpan Pemeriksaan" />
@@ -194,7 +252,7 @@ export default function PosyanduPemeriksaanPage() {
   );
 }
 
-/* ── Sub-components ── */
+/* ── Sub-components (tidak diubah sama sekali) ── */
 function FormModal({ title, icon: Icon, onClose, children }) {
   return (
     <>
