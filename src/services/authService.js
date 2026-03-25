@@ -1,7 +1,11 @@
 "use server";
 
+import { generateToken, verifyToken } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getToken } from "@/utils/cookie";
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 // ============================================================
 // Role yang berlaku di sistem ini:
@@ -17,6 +21,7 @@ export async function login(data) {
   const user = await prisma.user.findUnique({
     where: { username: data.username },
   });
+  console.log(user)
 
   if (!user) {
     throw new Error("Username tidak ditemukan");
@@ -28,13 +33,41 @@ export async function login(data) {
     throw new Error("Password salah");
   }
 
+  const token = generateToken({ id: user.id, name: user.username, rol: user.role, balitaId: user.balitaId });
+  const cookieStore = await cookies()
+
+  cookieStore.set('token', token, {
+    httpOnly: true,
+    path: '/',
+  })
+
   return {
-    id:       user.id,
+    id: user.id,
     username: user.username,
-    role:     user.role,      // "admin" | "perangkat" | "user"
+    role: user.role,      // "admin" | "perangkat" | "user"
     balitaId: user.balitaId,
     lansiaId: user.lansiaId,
+    token
   };
+}
+
+/*
+LOGOUT PERINTAH
+*/
+export async function logout() {
+  const cookieStore = await cookies();
+  cookieStore.delete('token');
+
+  redirect('/login');
+}
+
+export async function getCurrentUser() {
+  const token = await getToken()
+  console.log(token)
+  if (!token) return null
+
+  const payload = verifyToken(token)
+  return payload
 }
 
 /*
@@ -58,18 +91,18 @@ export async function register(data) {
       username: data.username,
       password: hashedPassword,
       // Hanya izinkan role yang valid, default ke "user"
-      role:     ["admin", "perangkat", "user"].includes(data.role)
-                  ? data.role
-                  : "user",
+      role: ["admin", "perangkat", "user"].includes(data.role)
+        ? data.role
+        : "user",
       balitaId: data.balitaId ? Number(data.balitaId) : null,
       lansiaId: data.lansiaId ? Number(data.lansiaId) : null,
     },
   });
 
   return {
-    id:       user.id,
+    id: user.id,
     username: user.username,
-    role:     user.role,
+    role: user.role,
   };
 }
 
@@ -84,7 +117,7 @@ export async function registerUser(data) {
     data: {
       username: data.username,
       password: hashedPassword,
-      role:     data.role || "user",
+      role: data.role || "user",
       balitaId: data.balitaId || null,
       lansiaId: data.lansiaId || null,
     },

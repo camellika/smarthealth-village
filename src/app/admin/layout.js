@@ -6,20 +6,25 @@ import {
   HeartPulse, LayoutDashboard, Baby, FileText,
   CalendarDays, LogOut, Bell, ChevronLeft, Users
 } from "lucide-react";
+import { logout } from "@/services/authService";
 
 const NAV_BALITA = [
-  { href: "/admin/balita/data",     label: "Data Balita",       icon: Baby },
+  { href: "/admin/balita/data", label: "Data Balita", icon: Baby },
   { href: "/admin/balita/posyandu", label: "Posyandu & Jadwal", icon: CalendarDays },
 ];
 
 const NAV_LANSIA = [
-  { href: "/admin/lansia/data",     label: "Data Lansia",              icon: Users },
+  { href: "/admin/lansia/data", label: "Data Lansia", icon: Users },
   { href: "/admin/lansia/posyandu", label: "Penjadwalan", icon: CalendarDays },
 ];
 
 const NAV_LAPORAN = [
   { href: "/admin/laporan", label: "Laporan", icon: FileText },
 ];
+
+const handleClick = async () => {
+  await logout()
+}
 
 export default function BalitaLayout({ children }) {
   const path = usePathname();
@@ -92,7 +97,7 @@ export default function BalitaLayout({ children }) {
             onMouseEnter={e => { e.currentTarget.style.color = "#2d7a4f"; e.currentTarget.style.background = "#f0f6f2"; }}
             onMouseLeave={e => { e.currentTarget.style.color = "#9aab9a"; e.currentTarget.style.background = ""; }}
           >
-            
+
           </Link>
         </div>
 
@@ -100,7 +105,7 @@ export default function BalitaLayout({ children }) {
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
 
           {/* — Dashboard — */}
-          
+
           <Link
             href="/admin"
             className={`nav-link ${path === "/admin" ? "active" : ""}`}
@@ -158,12 +163,14 @@ export default function BalitaLayout({ children }) {
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Ceria</p>
             </div>
           </div>
-          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
+          <button
+            onClick={() => handleClick()}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "#fecaca"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "#fee2e2"; }}
           >
             <LogOut size={13} /> Keluar
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -177,10 +184,10 @@ export default function BalitaLayout({ children }) {
               {path === "/admin"
                 ? "Dashboard Utama"
                 : [...NAV_BALITA, ...NAV_LANSIA, ...NAV_LAPORAN]
-                    .slice()
-                    .reverse()
-                    .find(n => path === n.href || path.startsWith(n.href + "/"))
-                    ?.label ?? "Modul Balita & Lansia"
+                  .slice()
+                  .reverse()
+                  .find(n => path === n.href || path.startsWith(n.href + "/"))
+                  ?.label ?? "Modul Balita & Lansia"
               }
             </p>
           </div>

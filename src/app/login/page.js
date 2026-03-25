@@ -22,7 +22,8 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(form);
-      localStorage.setItem("user", JSON.stringify(user));
+      console.log(user)
+      
 
       // ✅ REDIRECT BERDASARKAN ROLE
       if (user.role === "admin")     router.push("/admin");      // Kader

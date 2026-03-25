@@ -63,3 +63,20 @@ export async function getBalitaByNik(nik) {
     where: { nik }
   });
 }
+
+/**
+ * Ambil semua riwayat pemeriksaan berdasarkan balitaId milik user yang login.
+ */
+export async function getPosyanduBalitaByUser(balitaId) {
+  return await prisma.posyanduBalita.findMany({
+    where: {
+      balitaId: Number(balitaId),
+    },
+    include: {
+      balita: true,
+    },
+    orderBy: {
+      tanggal: "desc",
+    },
+  });
+}
