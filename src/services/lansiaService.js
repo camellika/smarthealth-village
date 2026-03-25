@@ -76,3 +76,17 @@ export async function getLansiaByNik(nik) {
     where: { nik }
   });
 }
+
+export async function getPosyanduLansiaByUser(lansiaId) {
+  return await prisma.posyanduLansia.findMany({
+    where: {
+      lansiaId: Number(lansiaId),
+    },
+    include: {
+      lansia: true,
+    },
+    orderBy: {
+      tanggal: "desc",
+    },
+  });
+}

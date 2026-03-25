@@ -33,7 +33,7 @@ export async function login(data) {
     throw new Error("Password salah");
   }
 
-  const token = generateToken({ id: user.id, name: user.username, rol: user.role, balitaId: user.balitaId });
+  const token = generateToken({ id: user.id, name: user.username, rol: user.role, balitaId: user.balitaId, lansiaId: user.lansiaId });
   const cookieStore = await cookies()
 
   cookieStore.set('token', token, {
