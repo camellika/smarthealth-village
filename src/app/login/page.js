@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/authService";
 
-export default function LoginPage() {
+export default function LoginPages() {
   const router = useRouter();
 
   const [form, setForm] = useState({ username: "", password: "" });
@@ -22,12 +22,10 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const user = await login(form);
-      console.log(user)
-      
 
       // ✅ REDIRECT BERDASARKAN ROLE
       if (user.role === "admin")     router.push("/admin");      // Kader
-      if (user.role === "perangkat") router.push("/dashboard");  // Perangkat Desa
+      if (user.role === "perangkat") router.push("/perangkat");  // Perangkat Desa
       if (user.role === "user")      router.push("/warga");      // Warga
 
     } catch (err) {
