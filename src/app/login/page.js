@@ -23,9 +23,12 @@ export default function LoginPage() {
     try {
       const user = await login(form);
       localStorage.setItem("user", JSON.stringify(user));
-      if (user.role === "user")   router.push("/dashboard");
-      if (user.role === "balita") router.push("/dashboard-balita");
-      if (user.role === "lansia") router.push("/dashboard-lansia");
+
+      // ✅ REDIRECT BERDASARKAN ROLE
+      if (user.role === "admin")     router.push("/admin");      // Kader
+      if (user.role === "perangkat") router.push("/dashboard");  // Perangkat Desa
+      if (user.role === "user")      router.push("/warga");      // Warga
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -158,16 +161,9 @@ export default function LoginPage() {
           text-transform: uppercase;
         }
         .input-wrap { position: relative; }
-        .input-icon {
-          position: absolute;
-          left: 14px; top: 50%;
-          transform: translateY(-50%);
-          font-size: 15px;
-          pointer-events: none;
-        }
         .form-input {
           width: 100%;
-          padding: 12px 16px 12px 42px;
+          padding: 12px 16px;
           border: 2px solid #d1fae5;
           border-radius: 12px;
           font-size: 14.5px;
@@ -187,6 +183,7 @@ export default function LoginPage() {
           box-shadow: 0 0 0 3px rgba(239,68,68,0.08);
         }
         .form-input::placeholder { color: #a7c4b3; }
+        .form-input.has-toggle { padding-right: 44px; }
 
         .toggle-pw {
           position: absolute;
@@ -348,7 +345,7 @@ export default function LoginPage() {
               <label className="form-label">Kata Sandi</label>
               <div className="input-wrap">
                 <input
-                  className={`form-input ${error ? "has-error" : ""}`}
+                  className={`form-input has-toggle ${error ? "has-error" : ""}`}
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Masukkan kata sandi"
@@ -356,7 +353,6 @@ export default function LoginPage() {
                   onChange={handleChange}
                   required
                   autoComplete="current-password"
-                  style={{ paddingRight: 44 }}
                 />
                 <button
                   type="button"
