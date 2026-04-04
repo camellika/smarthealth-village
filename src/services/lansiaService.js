@@ -6,87 +6,83 @@ export async function getLansia() {
   return await prisma.lansia.findMany({
     include: {
       user: true,
-      riwayat: true
-    }
+      riwayat: true,
+    },
   });
 }
 
 export async function getLansiaById(id) {
   return await prisma.lansia.findUnique({
-    where: { id: Number(id) }
+    where: { id: Number(id) },
   });
 }
 
 export async function createLansia(data) {
-  return await prisma.lansia.create({
-    data: {
-      nik: data.nik,
-      nama: data.nama,
-      alamat: data.alamat,
-      noTelp: data.noTelp || null,
-      tglLahir: new Date(data.tglLahir)
-    }
-  });
+  // Debug: cek semua field yang masuk
+  console.log("=== createLansia data masuk ===", JSON.stringify(data));
+
+  const payload = {
+    nik:          String(data.nik        ?? ""),
+    nama:         String(data.nama       ?? ""),
+    alamat:       String(data.alamat     ?? ""),
+    noTelp:       data.noTelp ? String(data.noTelp) : null,
+    tglLahir:     new Date(data.tglLahir),
+    jenisKelamin: data.jenisKelamin ? String(data.jenisKelamin) : null,
+  };
+
+  console.log("=== createLansia payload ke DB ===", JSON.stringify(payload));
+
+  return await prisma.lansia.create({ data: payload });
 }
 
 export async function updateLansia(id, data) {
+  // Debug: cek semua field yang masuk
+  console.log("=== updateLansia data masuk ===", JSON.stringify(data));
+
+  const payload = {
+    nik:          String(data.nik        ?? ""),
+    nama:         String(data.nama       ?? ""),
+    alamat:       String(data.alamat     ?? ""),
+    noTelp:       data.noTelp ? String(data.noTelp) : null,
+    tglLahir:     new Date(data.tglLahir),
+    jenisKelamin: data.jenisKelamin ? String(data.jenisKelamin) : null,
+  };
+
+  console.log("=== updateLansia payload ke DB ===", JSON.stringify(payload));
+
   return await prisma.lansia.update({
     where: { id: Number(id) },
-    data: {
-      nik: data.nik,
-      nama: data.nama,
-      alamat: data.alamat,
-      noTelp: data.noTelp || null,
-      tglLahir: new Date(data.tglLahir)
-    }
+    data:  payload,
   });
 }
 
-
 export async function deleteLansia(id) {
-  // Konfirmasi manual di UI sudah dilakukan
-
   // 1. Hapus riwayat posyandu lansia terkait
   await prisma.posyanduLansia.deleteMany({
-    where: { lansiaId: Number(id) }
+    where: { lansiaId: Number(id) },
   });
 
   // 2. Hapus user yang terhubung ke lansia ini
   await prisma.user.deleteMany({
-    where: { lansiaId: Number(id) }
+    where: { lansiaId: Number(id) },
   });
 
-  // 3. Hapus lansia jika masih ada
-  const exists = await prisma.lansia.findUnique({
-    where: { id: Number(id) }
-  });
-
-  if (!exists) {
-    throw new Error("Data lansia sudah tidak ada atau gagal ditemukan.");
-  }
-
+  // 3. Hapus lansia
   return await prisma.lansia.delete({
-    where: { id: Number(id) }
+    where: { id: Number(id) },
   });
 }
 
-
 export async function getLansiaByNik(nik) {
   return await prisma.lansia.findUnique({
-    where: { nik }
+    where: { nik },
   });
 }
 
 export async function getPosyanduLansiaByUser(lansiaId) {
   return await prisma.posyanduLansia.findMany({
-    where: {
-      lansiaId: Number(lansiaId),
-    },
-    include: {
-      lansia: true,
-    },
-    orderBy: {
-      tanggal: "desc",
-    },
+    where:   { lansiaId: Number(lansiaId) },
+    include: { lansia: true },
+    orderBy: { tanggal: "desc" },
   });
 }

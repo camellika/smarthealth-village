@@ -1,24 +1,42 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
-  HeartPulse, LayoutDashboard, Baby, FileText,
-  CalendarDays, LogOut, Bell, ChevronLeft, Users
+  HeartPulse, LayoutDashboard, FileText,
+  LogOut, Bell
 } from "lucide-react";
-import { logout } from "@/services/authService";
-
+import { logout, getCurrentUser } from "@/services/authService";
 
 const NAV_LAPORAN = [
   { href: "/perangkat/laporan", label: "Laporan", icon: FileText },
 ];
 
-const handleClick = async () => {
-  await logout()
-}
-
 export default function PerangkatLayout({ children }) {
-  const path = usePathname();
+  const path   = usePathname();
+  const router = useRouter();
+  const [user, setUser]       = useState(null);
+  const [checked, setChecked] = useState(false);
+
+  // ── Cek session sekali saat layout dimuat ──
+  useEffect(() => {
+    getCurrentUser().then((u) => {
+      if (!u || u.rol !== "perangkat") {
+        router.replace("/login");
+      } else {
+        setUser(u);
+        setChecked(true);
+      }
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  // Tampilkan blank sementara pengecekan berlangsung
+  if (!checked) return null;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#f5f7f4", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -75,40 +93,26 @@ export default function PerangkatLayout({ children }) {
 
         {/* Logo */}
         <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ background: "#2d7a4f", borderRadius: 9, padding: "6px 7px", display: "flex" }}>
               <HeartPulse size={16} color="white" />
             </div>
             <div>
-              <p style={{ fontWeight: 800, fontSize: 13, color: "#1f2d1f", lineHeight: 1.2 }}>SmartHealth<span style={{ color: "#2d7a4f" }}>Village</span></p>
-              
+              <p style={{ fontWeight: 800, fontSize: 13, color: "#1f2d1f", lineHeight: 1.2 }}>
+                SmartHealth<span style={{ color: "#2d7a4f" }}>Village</span>
+              </p>
+              <p style={{ fontSize: 10, color: "#9aab9a" }}>Portal Perangkat Desa</p>
             </div>
           </div>
-          <Link href="/perangkat" style={{ display: "flex", alignItems: "center", gap: 6, color: "#9aab9a", fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "5px 8px", borderRadius: 8, transition: "all 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#2d7a4f"; e.currentTarget.style.background = "#f0f6f2"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#9aab9a"; e.currentTarget.style.background = ""; }}
-          >
-
-          </Link>
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
 
-          {/* — Dashboard — */}
-
-          <Link
-            href="/perangkat"
-            className={`nav-link ${path === "/perangkat" ? "active" : ""}`}
-          >
+          <Link href="/perangkat" className={`nav-link ${path === "/perangkat" ? "active" : ""}`}>
             <LayoutDashboard size={16} /> Dashboard
           </Link>
 
-          
-
-
-
-          {/* — Laporan Section — */}
           {NAV_LAPORAN.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
             return (
@@ -123,15 +127,17 @@ export default function PerangkatLayout({ children }) {
         {/* User + logout */}
         <div style={{ borderTop: "1px solid #f0f6f2", padding: "12px 6px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2d7a4f,#3a9e6e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>AD</div>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2d7a4f,#3a9e6e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+              {user?.name?.slice(0, 2).toUpperCase() ?? "PR"}
+            </div>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2d1f" }}>Admin Desa</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2d1f" }}>{user?.name ?? "Perangkat Desa"}</p>
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Ceria</p>
             </div>
           </div>
           <button
-            onClick={() => handleClick()}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
+            onClick={handleLogout}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.18s", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             onMouseEnter={e => { e.currentTarget.style.background = "#fecaca"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "#fee2e2"; }}
           >
@@ -150,10 +156,10 @@ export default function PerangkatLayout({ children }) {
               {path === "/perangkat"
                 ? "Dashboard Utama"
                 : [...NAV_LAPORAN]
-                  .slice()
-                  .reverse()
-                  .find(n => path === n.href || path.startsWith(n.href + "/"))
-                  ?.label ?? "Laporan Posyandu Balita & Lansia"
+                    .slice()
+                    .reverse()
+                    .find(n => path === n.href || path.startsWith(n.href + "/"))
+                    ?.label ?? "Laporan Posyandu Balita & Lansia"
               }
             </p>
           </div>

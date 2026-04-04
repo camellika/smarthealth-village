@@ -1,33 +1,52 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   HeartPulse, LayoutDashboard, Baby, FileText,
-  CalendarDays, LogOut, Bell, ChevronLeft, Users
+  CalendarDays, LogOut, Bell, Users
 } from "lucide-react";
-import { logout } from "@/services/authService";
+import { logout, getCurrentUser } from "@/services/authService";
 
 const NAV_BALITA = [
-  { href: "/admin/balita/data", label: "Data Balita", icon: Baby },
-  { href: "/admin/balita/posyandu", label: "Posyandu & Jadwal", icon: CalendarDays },
+  { href: "/admin/balita/data",    label: "Data Balita",    icon: Baby },
+  { href: "/admin/balita/posyandu",label: "Posyandu & Jadwal", icon: CalendarDays },
 ];
 
 const NAV_LANSIA = [
-  { href: "/admin/lansia/data", label: "Data Lansia", icon: Users },
-  { href: "/admin/lansia/posyandu", label: "Penjadwalan", icon: CalendarDays },
+  { href: "/admin/lansia/data",    label: "Data Lansia",    icon: Users },
+  { href: "/admin/lansia/posyandu",label: "Penjadwalan",    icon: CalendarDays },
 ];
 
 const NAV_LAPORAN = [
   { href: "/admin/laporan", label: "Laporan", icon: FileText },
 ];
 
-const handleClick = async () => {
-  await logout()
-}
+export default function AdminLayout({ children }) {
+  const path   = usePathname();
+  const router = useRouter();
+  const [user, setUser]       = useState(null);
+  const [checked, setChecked] = useState(false);
 
-export default function BalitaLayout({ children }) {
-  const path = usePathname();
+  // ── Cek session sekali saat layout dimuat ──
+  useEffect(() => {
+    getCurrentUser().then((u) => {
+      if (!u || u.rol !== "admin") {
+        router.replace("/login");
+      } else {
+        setUser(u);
+        setChecked(true);
+      }
+    });
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  // Tampilkan blank sementara middleware/server memverifikasi
+  if (!checked) return null;
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", background: "#f5f7f4", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -84,65 +103,38 @@ export default function BalitaLayout({ children }) {
 
         {/* Logo */}
         <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ background: "#2d7a4f", borderRadius: 9, padding: "6px 7px", display: "flex" }}>
               <HeartPulse size={16} color="white" />
             </div>
             <div>
-              <p style={{ fontWeight: 800, fontSize: 13, color: "#1f2d1f", lineHeight: 1.2 }}>SmartHealth<span style={{ color: "#2d7a4f" }}>Village</span></p>
+              <p style={{ fontWeight: 800, fontSize: 13, color: "#1f2d1f", lineHeight: 1.2 }}>
+                SmartHealth<span style={{ color: "#2d7a4f" }}>Village</span>
+              </p>
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Modul Balita & Lansia</p>
             </div>
           </div>
-          <Link href="/admin" style={{ display: "flex", alignItems: "center", gap: 6, color: "#9aab9a", fontSize: 12, fontWeight: 600, textDecoration: "none", padding: "5px 8px", borderRadius: 8, transition: "all 0.15s" }}
-            onMouseEnter={e => { e.currentTarget.style.color = "#2d7a4f"; e.currentTarget.style.background = "#f0f6f2"; }}
-            onMouseLeave={e => { e.currentTarget.style.color = "#9aab9a"; e.currentTarget.style.background = ""; }}
-          >
-
-          </Link>
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
 
-          {/* — Dashboard — */}
-
-          <Link
-            href="/admin"
-            className={`nav-link ${path === "/admin" ? "active" : ""}`}
-          >
+          <Link href="/admin" className={`nav-link ${path === "/admin" ? "active" : ""}`}>
             <LayoutDashboard size={16} /> Dashboard
           </Link>
 
-          {/* — Balita Section — */}
-          <Link
-            href="/admin/balita"
-            className={`nav-link ${path === "/admin/balita" || path.startsWith("/admin/balita/") ? "active" : ""}`}
-          >
-            <CalendarDays size={16} /> Balita
+          <Link href="/admin/balita" className={`nav-link ${path === "/admin/balita" || path.startsWith("/admin/balita/") ? "active" : ""}`}>
+            <Baby size={16} /> Balita
           </Link>
 
-
-
-          {/* — Lansia Section — */}
-          <Link
-            href="/admin/lansia"
-            className={`nav-link ${path === "/admin/lansia" || path.startsWith("/admin/lansia/") ? "active" : ""}`}
-          >
-            <CalendarDays size={16} /> Lansia
+          <Link href="/admin/lansia" className={`nav-link ${path === "/admin/lansia" || path.startsWith("/admin/lansia/") ? "active" : ""}`}>
+            <Users size={16} /> Lansia
           </Link>
 
-
-          {/* — Penjadwalan Section — */}
-          <Link
-            href="/admin/penjadwalan"
-            className={`nav-link ${path === "/admin/penjadwalan" || path.startsWith("/admin/penjadwalan/") ? "active" : ""}`}
-          >
+          <Link href="/admin/penjadwalan" className={`nav-link ${path === "/admin/penjadwalan" || path.startsWith("/admin/penjadwalan/") ? "active" : ""}`}>
             <CalendarDays size={16} /> Penjadwalan
           </Link>
 
-
-
-          {/* — Laporan Section — */}
           {NAV_LAPORAN.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
             return (
@@ -157,15 +149,17 @@ export default function BalitaLayout({ children }) {
         {/* User + logout */}
         <div style={{ borderTop: "1px solid #f0f6f2", padding: "12px 6px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2d7a4f,#3a9e6e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>AD</div>
+            <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#2d7a4f,#3a9e6e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+              {user?.name?.slice(0, 2).toUpperCase() ?? "AD"}
+            </div>
             <div>
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2d1f" }}>Admin Kader Posyandu</p>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2d1f" }}>{user?.name ?? "Admin"}</p>
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Ceria</p>
             </div>
           </div>
           <button
-            onClick={() => handleClick()}
-            style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, textDecoration: "none", transition: "background 0.18s" }}
+            onClick={handleLogout}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", padding: "7px 12px", borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "background 0.18s", fontFamily: "'Plus Jakarta Sans', sans-serif" }}
             onMouseEnter={e => { e.currentTarget.style.background = "#fecaca"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "#fee2e2"; }}
           >
@@ -184,10 +178,10 @@ export default function BalitaLayout({ children }) {
               {path === "/admin"
                 ? "Dashboard Utama"
                 : [...NAV_BALITA, ...NAV_LANSIA, ...NAV_LAPORAN]
-                  .slice()
-                  .reverse()
-                  .find(n => path === n.href || path.startsWith(n.href + "/"))
-                  ?.label ?? "Modul Balita & Lansia"
+                    .slice()
+                    .reverse()
+                    .find(n => path === n.href || path.startsWith(n.href + "/"))
+                    ?.label ?? "Modul Balita & Lansia"
               }
             </p>
           </div>

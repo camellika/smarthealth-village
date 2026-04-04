@@ -26,7 +26,7 @@ export default function LoginPages() {
       // ✅ REDIRECT BERDASARKAN ROLE
       if (user.role === "admin")     router.push("/admin");      // Kader
       if (user.role === "perangkat") router.push("/perangkat");  // Perangkat Desa
-      if (user.role === "user")      router.push("/warga");      // Warga
+      if (user.role === "user")      router.push("/warga/riwayat");      // Warga
 
     } catch (err) {
       setError(err.message);

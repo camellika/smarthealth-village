@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { getLansia, createLansia, updateLansia, deleteLansia } from "@/services/lansiaService";
 import { getPosyanduLansia, createPosyanduLansia, updatePosyanduLansia, deletePosyanduLansia } from "@/services/posyanduLansiaService";
 import { getJadwalTerdekat } from "@/services/penjadwalanService";
@@ -8,11 +9,13 @@ import {
   Users, Plus, Search, ChevronDown, ChevronUp,
   AlertTriangle, Calendar, X, CreditCard,
   Phone, MapPin, Save, Pencil, Trash2, Scale, Ruler,
-  Activity, Droplets, Heart
+  Activity, Droplets, Heart, Info, CheckCircle, AlertCircle
 } from "lucide-react";
 
-/* ── helpers ── */
-const INIT_FORM_LANSIA = { nik: "", nama: "", alamat: "", noTelp: "", tglLahir: "" };
+/* ══════════════════════════════════════════
+   HELPERS
+══════════════════════════════════════════ */
+const INIT_FORM_LANSIA = { nik: "", nama: "", alamat: "", noTelp: "", tglLahir: "", jenisKelamin: "" };
 const INIT_FORM_PEM    = { lansiaId: "", kegiatan: "", tanggal: "", bb: "", tb: "", lingkarPerut: "", tensi: "", gulaDarah: "" };
 
 const formatDate = (d) => {
@@ -37,12 +40,268 @@ const hitungUsia = (tgl) => {
   return `${tahun} th`;
 };
 
+/* ── Status Tensi ── */
+function getStatusTensi(tensi) {
+  if (!tensi) return null;
+  if (tensi >= 160) return { status: "tinggi2", label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", icon: "🔴" };
+  if (tensi >= 140) return { status: "tinggi1", label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", icon: "🔴" };
+  if (tensi >= 120) return { status: "prehiper", label: "Pra-Hipertensi",  color: "#d97706", bg: "#fef3c7", icon: "🟡" };
+  if (tensi < 90)   return { status: "rendah",  label: "Tensi Rendah",    color: "#d97706", bg: "#fef3c7", icon: "🟡" };
+  return               { status: "normal",  label: "Normal",          color: "#2d7a4f", bg: "#e8f5ed", icon: "🟢" };
+}
+
+/* ── Status Gula Darah ── */
+function getStatusGula(gula) {
+  if (!gula) return null;
+  if (gula >= 200)  return { label: "Diabetes",    color: "#dc2626", bg: "#fee2e2" };
+  if (gula >= 100)  return { label: "Pra-Diabetes", color: "#d97706", bg: "#fef3c7" };
+  return               { label: "Normal",       color: "#2d7a4f", bg: "#e8f5ed" };
+}
+
+/* ══════════════════════════════════════════
+   MODAL DETAIL PEMERIKSAAN LANSIA
+══════════════════════════════════════════ */
+function DetailModal({ data, onClose }) {
+  if (!data) return null;
+
+  const tensiStatus = data.tensi     ? getStatusTensi(parseFloat(data.tensi))     : null;
+  const gulaStatus  = data.gulaDarah ? getStatusGula(parseFloat(data.gulaDarah))  : null;
+
+  /* ── Saran per kondisi tensi ── */
+  const saranTensi = {
+    normal: {
+      judul: "Pertahankan Tekanan Darah Normal",
+      warna: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5",
+      poin: [
+        "✅ Pertahankan pola makan rendah garam dan lemak jenuh",
+        "🚶 Lakukan aktivitas fisik ringan seperti jalan kaki 30 menit/hari",
+        "🧘 Kelola stres dengan istirahat cukup dan relaksasi",
+        "💊 Rutin kontrol tekanan darah minimal sebulan sekali",
+        "🚭 Hindari rokok dan konsumsi alkohol",
+        "🥦 Perbanyak konsumsi buah, sayur, dan makanan berserat tinggi",
+      ],
+    },
+    prehiper: {
+      judul: "Waspadai Pra-Hipertensi",
+      warna: "#d97706", bg: "#fef3c7", border: "#fde68a",
+      poin: [
+        "⚠️ Kurangi konsumsi garam — maksimal 1 sendok teh/hari",
+        "🏃 Tingkatkan aktivitas fisik secara bertahap dan konsisten",
+        "🥗 Terapkan diet DASH: banyak buah, sayur, dan produk susu rendah lemak",
+        "⚖️ Jaga berat badan ideal — turunkan bila berlebih",
+        "📅 Pantau tekanan darah setiap 2 minggu sekali",
+        "🚫 Hindari makanan olahan, fast food, dan minuman berkafein berlebihan",
+      ],
+    },
+    tinggi1: {
+      judul: "Penanganan Hipertensi Tingkat 1",
+      warna: "#dc2626", bg: "#fee2e2", border: "#fecaca",
+      poin: [
+        "🏥 Konsultasikan ke dokter atau puskesmas untuk evaluasi medis",
+        "💊 Ikuti anjuran dokter — mungkin diperlukan obat antihipertensi",
+        "🧂 Batasi garam secara ketat — hindari makanan asin dan olahan",
+        "📊 Ukur tekanan darah setiap hari dan catat hasilnya",
+        "🥩 Kurangi daging merah, santan, dan makanan berlemak tinggi",
+        "😴 Pastikan tidur cukup 7–8 jam per malam untuk membantu regulasi tekanan darah",
+      ],
+    },
+    tinggi2: {
+      judul: "Penanganan Darurat Hipertensi Tingkat 2",
+      warna: "#7c2d12", bg: "#fee2e2", border: "#fca5a5",
+      poin: [
+        "🚨 Segera rujuk ke dokter atau IGD rumah sakit terdekat",
+        "💉 Wajib mendapat penanganan medis dan kemungkinan rawat inap",
+        "💊 Jangan hentikan obat tanpa sepengetahuan dokter",
+        "🛌 Batasi aktivitas fisik berat — istirahat total bila diperlukan",
+        "📵 Hindari stres, kafein, dan stimulan apapun",
+        "👨‍👩‍👧 Libatkan keluarga untuk memantau kondisi dan memastikan minum obat teratur",
+      ],
+    },
+    rendah: {
+      judul: "Penanganan Tensi Rendah",
+      warna: "#d97706", bg: "#fef3c7", border: "#fde68a",
+      poin: [
+        "💧 Perbanyak minum air putih minimal 8 gelas/hari",
+        "🧂 Tambahkan sedikit garam dalam makanan sesuai anjuran dokter",
+        "🛏️ Hindari berdiri terlalu cepat dari posisi duduk atau berbaring",
+        "🩺 Konsultasikan ke dokter bila disertai pusing, lemas, atau pingsan",
+        "🥜 Makan dalam porsi kecil tapi sering untuk menjaga tekanan darah stabil",
+      ],
+    },
+  };
+
+  /* ── Saran gula darah ── */
+  const saranGula = {
+    Normal: {
+      judul: "Pertahankan Kadar Gula Normal",
+      warna: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5",
+      poin: [
+        "✅ Pertahankan pola makan sehat dan teratur",
+        "🏃 Olahraga ringan minimal 150 menit per minggu",
+        "🍚 Batasi karbohidrat olahan — pilih nasi merah, oat, atau ubi",
+        "📅 Periksa gula darah minimal 3 bulan sekali",
+      ],
+    },
+    "Pra-Diabetes": {
+      judul: "Cegah Perkembangan ke Diabetes",
+      warna: "#d97706", bg: "#fef3c7", border: "#fde68a",
+      poin: [
+        "⚠️ Kurangi konsumsi gula, minuman manis, dan karbohidrat sederhana",
+        "🥗 Perbanyak serat: sayur, buah, kacang-kacangan",
+        "⚖️ Turunkan berat badan 5–7% bila kelebihan berat badan",
+        "🏋️ Aktif bergerak — aktivitas fisik membantu sensitivitas insulin",
+        "🩺 Konsultasi dokter untuk pemantauan lebih ketat",
+      ],
+    },
+    Diabetes: {
+      judul: "Penanganan Diabetes",
+      warna: "#dc2626", bg: "#fee2e2", border: "#fecaca",
+      poin: [
+        "🏥 Wajib dalam pengawasan dokter dan mendapat terapi medis",
+        "💊 Minum obat atau insulin sesuai resep — jangan berhenti sendiri",
+        "🍬 Hindari total gula murni, minuman manis, dan makanan tinggi GI",
+        "📊 Cek gula darah secara rutin sesuai anjuran dokter",
+        "👣 Periksa kaki setiap hari — diabetes meningkatkan risiko luka sulit sembuh",
+        "🥦 Diet DM: nasi porsi kecil, banyak sayur, protein tanpa lemak",
+      ],
+    },
+  };
+
+  const infoTensi = tensiStatus ? saranTensi[tensiStatus.status] : null;
+  const infoGula  = gulaStatus  ? saranGula[gulaStatus.label]    : null;
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,30,15,0.45)", backdropFilter: "blur(5px)", zIndex: 200 }} />
+      <div style={{
+        position: "fixed", top: "50%", left: "50%",
+        transform: "translate(-50%,-50%)",
+        width: "min(460px,94vw)", maxHeight: "88vh", overflowY: "auto",
+        background: "#fff", borderRadius: 20,
+        boxShadow: "0 24px 64px rgba(0,0,0,0.16)",
+        zIndex: 201, fontFamily: "'Plus Jakarta Sans',sans-serif",
+        animation: "popIn 0.22s cubic-bezier(0.16,1,0.3,1)"
+      }}>
+
+        {/* Header */}
+        <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ background: tensiStatus ? tensiStatus.bg : "#f5f7f4", borderRadius: 10, padding: 9 }}>
+              <Info size={18} color={tensiStatus ? tensiStatus.color : "#9aab9a"} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: "#1f2d1f" }}>Hasil Pemeriksaan</h2>
+              <p style={{ fontSize: 12, color: "#9aab9a", marginTop: 1 }}>{data.lansia?.nama ?? "-"} · {data.kegiatan}</p>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: "#f5f7f4", border: "1px solid #e4ede6", borderRadius: 9, padding: "6px 7px", cursor: "pointer", display: "flex" }}>
+            <X size={16} color="#6b7c6b" />
+          </button>
+        </div>
+
+        <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
+
+          {/* Status Tensi Banner */}
+          {tensiStatus ? (
+            <div style={{ background: tensiStatus.bg, border: `1.5px solid ${tensiStatus.color}35`, borderRadius: 14, padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
+                <span style={{ fontSize: 26 }}>{tensiStatus.icon}</span>
+                <div>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: tensiStatus.color, textTransform: "uppercase", letterSpacing: 0.6 }}>Status Tekanan Darah</p>
+                  <p style={{ fontSize: 19, fontWeight: 800, color: tensiStatus.color }}>{tensiStatus.label}</p>
+                </div>
+              </div>
+              <p style={{ fontSize: 12, color: tensiStatus.color + "cc", paddingTop: 8, borderTop: `1px solid ${tensiStatus.color}20` }}>
+                Tensi: <strong>{data.tensi} mmHg</strong>
+              </p>
+            </div>
+          ) : (
+            <div style={{ background: "#f8fbf9", border: "1px solid #e4ede6", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 10 }}>
+              <AlertCircle size={16} color="#9aab9a" />
+              <p style={{ fontSize: 13, color: "#9aab9a" }}>Tensi belum diisi — status tidak dapat dihitung.</p>
+            </div>
+          )}
+
+          {/* Status Gula Banner */}
+          {gulaStatus && (
+            <div style={{ background: gulaStatus.bg, border: `1.5px solid ${gulaStatus.color}35`, borderRadius: 14, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: gulaStatus.color, textTransform: "uppercase", letterSpacing: 0.6 }}>Status Gula Darah</p>
+                <p style={{ fontSize: 19, fontWeight: 800, color: gulaStatus.color }}>{gulaStatus.label}</p>
+                <p style={{ fontSize: 12, color: gulaStatus.color + "cc", marginTop: 4 }}>Gula darah: <strong>{data.gulaDarah} mg/dL</strong></p>
+              </div>
+            </div>
+          )}
+
+          {/* Data Pengukuran */}
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#9aab9a", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Hasil Pengukuran</p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              {[
+                { label: "Berat Badan",   value: data.bb          ? `${data.bb} kg`          : "-", accent: true,  c: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" },
+                { label: "Tinggi Badan",  value: data.tb          ? `${data.tb} cm`          : "-", accent: true,  c: "#0284c7", bg: "#e0f2fe", border: "#bae6fd" },
+                { label: "Lingkar Perut", value: data.lingkarPerut ? `${data.lingkarPerut} cm` : "-", accent: false },
+                { label: "Tensi",         value: data.tensi       ? `${data.tensi} mmHg`     : "-", accent: !!data.tensi, c: tensiStatus?.color ?? "#dc2626", bg: tensiStatus?.bg ?? "#fee2e2", border: (tensiStatus?.color ?? "#dc2626") + "40" },
+                { label: "Gula Darah",    value: data.gulaDarah   ? `${data.gulaDarah} mg/dL` : "-", accent: !!data.gulaDarah, c: gulaStatus?.color ?? "#6b7c6b", bg: gulaStatus?.bg ?? "#f8fbf9", border: (gulaStatus?.color ?? "#9aab9a") + "40" },
+              ].map(({ label, value, accent, c, bg, border }) => (
+                <div key={label} style={{ background: accent ? bg : "#f8fbf9", border: `1px solid ${accent ? border : "#f0f6f2"}`, borderRadius: 10, padding: "10px 12px" }}>
+                  <p style={{ fontSize: 11, color: accent ? c : "#9aab9a", fontWeight: 600 }}>{label}</p>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: accent ? c : "#1f2d1f", marginTop: 2 }}>{value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Saran Tensi */}
+          {infoTensi && (
+            <div style={{ background: infoTensi.bg, border: `1.5px solid ${infoTensi.border}`, borderRadius: 14, padding: "14px 16px" }}>
+              <p style={{ fontSize: 13, fontWeight: 800, color: infoTensi.warna, marginBottom: 12 }}>💡 {infoTensi.judul}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {infoTensi.poin.map((p, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px 12px" }}>
+                    <p style={{ fontSize: 12, color: "#1f2d1f", lineHeight: 1.6 }}>{p}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Saran Gula */}
+          {infoGula && (
+            <div style={{ background: infoGula.bg, border: `1.5px solid ${infoGula.border}`, borderRadius: 14, padding: "14px 16px" }}>
+              <p style={{ fontSize: 13, fontWeight: 800, color: infoGula.warna, marginBottom: 12 }}>🩸 {infoGula.judul}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                {infoGula.poin.map((p, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.6)", borderRadius: 8, padding: "8px 12px" }}>
+                    <p style={{ fontSize: 12, color: "#1f2d1f", lineHeight: 1.6 }}>{p}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        <div style={{ padding: "12px 20px", borderTop: "1px solid #f0f6f2", position: "sticky", bottom: 0, background: "#fff" }}>
+          <button onClick={onClose} style={{ width: "100%", padding: "11px", background: "#2d7a4f", color: "#fff", border: "none", borderRadius: 10, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
+            Tutup
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ══════════════════════════════════════════
    MODAL FORM LANSIA — Tambah & Edit
 ══════════════════════════════════════════ */
 function LansiaFormModal({ onClose, onSubmit, editData }) {
   const isEdit = !!editData;
-  const [form, setForm]         = useState(isEdit ? { ...editData, tglLahir: toInputDate(editData.tglLahir) } : INIT_FORM_LANSIA);
+  const [form, setForm] = useState(
+    isEdit
+      ? { ...editData, tglLahir: toInputDate(editData.tglLahir), jenisKelamin: editData.jenisKelamin ?? "" }
+      : INIT_FORM_LANSIA
+  );
   const [errors, setErrors]     = useState({});
   const [loading, setLoading]   = useState(false);
   const [apiError, setApiError] = useState("");
@@ -56,11 +315,12 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
 
   function validate() {
     const e = {};
-    if (!form.nik.trim())                   e.nik      = "NIK wajib diisi";
-    else if (form.nik.trim().length !== 16) e.nik      = "NIK harus 16 digit";
-    if (!form.nama.trim())                  e.nama     = "Nama lansia wajib diisi";
-    if (!form.alamat.trim())                e.alamat   = "Alamat wajib diisi";
-    if (!form.tglLahir)                     e.tglLahir = "Tanggal lahir wajib diisi";
+    if (!form.nik.trim())                   e.nik          = "NIK wajib diisi";
+    else if (form.nik.trim().length !== 16) e.nik          = "NIK harus 16 digit";
+    if (!form.nama.trim())                  e.nama         = "Nama lansia wajib diisi";
+    if (!form.alamat.trim())                e.alamat       = "Alamat wajib diisi";
+    if (!form.tglLahir)                     e.tglLahir     = "Tanggal lahir wajib diisi";
+    if (!form.jenisKelamin)                 e.jenisKelamin = "Jenis kelamin wajib dipilih";
     return e;
   }
 
@@ -69,21 +329,17 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setLoading(true);
-    try {
-      await onSubmit(form);
-    } catch (err) {
-      setApiError(err?.message || "Terjadi kesalahan, coba lagi.");
-    } finally {
-      setLoading(false);
-    }
+    try { await onSubmit(form); }
+    catch (err) { setApiError(err?.message || "Terjadi kesalahan, coba lagi."); }
+    finally { setLoading(false); }
   }
 
   const fields = [
-    { name: "nik",      label: "NIK",           type: "text",     icon: CreditCard, placeholder: "16 digit NIK lansia",       span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true  },
-    { name: "nama",     label: "Nama Lansia",    type: "text",     icon: Users,      placeholder: "Nama lengkap lansia",        span: 1, required: true  },
-    { name: "noTelp",   label: "No. Telepon",    type: "text",     icon: Phone,      placeholder: "08xx-xxxx-xxxx (opsional)",  span: 1, required: false },
-    { name: "tglLahir", label: "Tanggal Lahir",  type: "date",     icon: Calendar,   placeholder: "",                           span: 1, required: true  },
-    { name: "alamat",   label: "Alamat Lengkap", type: "textarea", icon: MapPin,     placeholder: "RT/RW, Dusun, Desa…",       span: 2, required: true  },
+    { name: "nik",      label: "NIK",           type: "text",     icon: CreditCard, placeholder: "16 digit NIK lansia",      span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true  },
+    { name: "nama",     label: "Nama Lansia",    type: "text",     icon: Users,      placeholder: "Nama lengkap lansia",       span: 1, required: true  },
+    { name: "noTelp",   label: "No. Telepon",    type: "text",     icon: Phone,      placeholder: "08xx-xxxx-xxxx (opsional)", span: 1, required: false },
+    { name: "tglLahir", label: "Tanggal Lahir",  type: "date",     icon: Calendar,   placeholder: "",                          span: 1, required: true  },
+    { name: "alamat",   label: "Alamat Lengkap", type: "textarea", icon: MapPin,     placeholder: "RT/RW, Dusun, Desa…",      span: 2, required: true  },
   ];
 
   return (
@@ -101,6 +357,9 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
           .mta:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,0.1); }
           .mta::placeholder { color:#b5ceba; }
           .mta.err   { border-color:#dc2626; }
+          .msel { width:100%;border:1.5px solid #e4ede6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s;appearance:none;cursor:pointer; }
+          .msel:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,0.1); }
+          .msel.err   { border-color:#dc2626; }
         `}</style>
 
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -141,6 +400,22 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
                 {hint && !errors[name] && <p style={{ color: "#9aab9a", fontSize: 11, marginTop: 4 }}>{hint}</p>}
               </div>
             ))}
+            <div style={{ gridColumn: "auto" }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 700, color: "#3d5542", marginBottom: 7 }}>
+                Jenis Kelamin <span style={{ color: "#dc2626" }}>*</span>
+              </label>
+              <div style={{ position: "relative" }}>
+                <ChevronDown size={14} color="#9aab9a" style={{ position: "absolute", right: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+                <select name="jenisKelamin" value={form.jenisKelamin ?? ""} onChange={handleChange}
+                  className={`msel${errors.jenisKelamin ? " err" : ""}`}
+                  style={{ color: form.jenisKelamin ? "#1f2d1f" : "#b5ceba" }}>
+                  <option value="" disabled>-- Pilih jenis kelamin --</option>
+                  <option value="Laki-laki">Laki-laki</option>
+                  <option value="Perempuan">Perempuan</option>
+                </select>
+              </div>
+              {errors.jenisKelamin && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {errors.jenisKelamin}</p>}
+            </div>
           </div>
           <p style={{ color: "#b5ceba", fontSize: 11, marginTop: 14 }}><span style={{ color: "#dc2626" }}>*</span> Field wajib diisi</p>
         </div>
@@ -199,38 +474,26 @@ function DeleteConfirmModal({ lansia, onClose, onConfirm, loading }) {
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving }) {
   const isEdit = !!editData;
-  const [pemForm, setPemForm]       = useState(
-    isEdit
-      ? { ...editData, tanggal: toInputDate(editData.tanggal) }
-      : INIT_FORM_PEM
-  );
-  const [pemErr, setPemErr]         = useState({});
-  const [jadwalList, setJadwalList] = useState([]);
+  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: toInputDate(editData.tanggal) } : INIT_FORM_PEM);
+  const [pemErr, setPemErr]               = useState({});
+  const [jadwalList, setJadwalList]       = useState([]);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
 
-  /* ── load jadwal dari service penjadwalan ── */
   useEffect(() => {
-    getJadwalTerdekat()
-      .then(setJadwalList)
-      .finally(() => setLoadingJadwal(false));
+    getJadwalTerdekat().then(setJadwalList).finally(() => setLoadingJadwal(false));
   }, []);
 
-  /* ── saat pilih jadwal, otomatis isi tanggal ── */
+  /* Preview status tensi real-time */
+  const tensiPreview = pemForm.tensi ? getStatusTensi(parseFloat(pemForm.tensi)) : null;
+
   function handleChange(e) {
     const { name, value } = e.target;
-
     if (name === "kegiatan") {
-      /* cari jadwal yang dipilih lalu pre-fill tanggal */
       const jadwalDipilih = jadwalList.find(j => j.kegiatan === value);
-      setPemForm(p => ({
-        ...p,
-        kegiatan: value,
-        tanggal: jadwalDipilih ? toInputDate(jadwalDipilih.tanggal) : p.tanggal,
-      }));
+      setPemForm(p => ({ ...p, kegiatan: value, tanggal: jadwalDipilih ? toInputDate(jadwalDipilih.tanggal) : p.tanggal }));
     } else {
       setPemForm(p => ({ ...p, [name]: value }));
     }
-
     if (pemErr[name]) setPemErr(p => ({ ...p, [name]: "" }));
   }
 
@@ -254,9 +517,10 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,30,15,0.35)", backdropFilter: "blur(4px)", zIndex: 200 }} />
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px,100vw)", background: "#fff", boxShadow: "-8px 0 40px rgba(0,0,0,0.12)", zIndex: 201, display: "flex", flexDirection: "column", fontFamily: "'Plus Jakarta Sans',sans-serif", animation: "slideInRight 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
 
+        {/* Header */}
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ background: isEdit ? "#fef3c7" : "#e8f5ed", borderRadius: 10, padding: 9 }}>
+            <div style={{ background: isEdit ? "#fef3c7" : "#f3f0ff", borderRadius: 10, padding: 9 }}>
               <Activity size={18} color={isEdit ? "#d97706" : "#2d7a4f"} />
             </div>
             <div>
@@ -272,30 +536,12 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 22px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px 14px" }}>
 
-            {/* ── Pilih Kegiatan (dropdown dari jadwal) ── */}
+            {/* Kegiatan */}
             <div style={{ gridColumn: "1/-1" }}>
               <label className="label">Nama Kegiatan <span style={{ color: "#dc2626" }}>*</span></label>
-              <select
-                name="kegiatan"
-                value={pemForm.kegiatan}
-                onChange={handleChange}
-                disabled={loadingJadwal}
-                style={{
-                  width: "100%",
-                  border: `1.5px solid ${pemErr.kegiatan ? "#dc2626" : "#e4ede6"}`,
-                  borderRadius: 10,
-                  padding: "10px 12px",
-                  fontSize: 14,
-                  fontFamily: "'Plus Jakarta Sans',sans-serif",
-                  color: pemForm.kegiatan ? "#1f2d1f" : "#9aab9a",
-                  background: loadingJadwal ? "#f8fbf9" : "#fff",
-                  outline: "none",
-                  cursor: loadingJadwal ? "not-allowed" : "pointer",
-                }}
-              >
-                <option value="">
-                  {loadingJadwal ? "Memuat jadwal…" : "-- Pilih jadwal kegiatan --"}
-                </option>
+              <select name="kegiatan" value={pemForm.kegiatan ?? ""} onChange={handleChange} disabled={loadingJadwal}
+                style={{ width: "100%", border: `1.5px solid ${pemErr.kegiatan ? "#dc2626" : "#e4ede6"}`, borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "'Plus Jakarta Sans',sans-serif", color: pemForm.kegiatan ? "#1f2d1f" : "#9aab9a", background: loadingJadwal ? "#f8fbf9" : "#fff", outline: "none", cursor: loadingJadwal ? "not-allowed" : "pointer" }}>
+                <option value="">{loadingJadwal ? "Memuat jadwal…" : "-- Pilih jadwal kegiatan --"}</option>
                 {jadwalList.map(j => (
                   <option key={j.id} value={j.kegiatan}>
                     {j.kegiatan} · {new Date(j.tanggal).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })} · {j.tempat}
@@ -303,17 +549,12 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
                 ))}
               </select>
               {pemErr.kegiatan && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.kegiatan}</p>}
-              {!loadingJadwal && jadwalList.length === 0 && (
-                <p style={{ color: "#9aab9a", fontSize: 11, marginTop: 4 }}>
-                  Belum ada jadwal kegiatan. Tambahkan jadwal terlebih dahulu.
-                </p>
-              )}
             </div>
 
-            {/* ── Pilih Lansia ── */}
+            {/* Nama Lansia */}
             <div style={{ gridColumn: "1/-1" }}>
               <label className="label">Nama Lansia <span style={{ color: "#dc2626" }}>*</span></label>
-              <select name="lansiaId" value={pemForm.lansiaId} onChange={handleChange}
+              <select name="lansiaId" value={pemForm.lansiaId ?? ""} onChange={handleChange}
                 style={{ width: "100%", border: `1.5px solid ${pemErr.lansiaId ? "#dc2626" : "#e4ede6"}`, borderRadius: 10, padding: "10px 12px", fontSize: 14, fontFamily: "'Plus Jakarta Sans',sans-serif", color: pemForm.lansiaId ? "#1f2d1f" : "#9aab9a", background: "#fff", outline: "none" }}>
                 <option value="">-- Pilih lansia --</option>
                 {lansiaList.map(l => <option key={l.id} value={l.id}>{l.nama} ({hitungUsia(l.tglLahir)})</option>)}
@@ -321,25 +562,16 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               {pemErr.lansiaId && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.lansiaId}</p>}
             </div>
 
-            {/* ── Tanggal Pemeriksaan (auto-fill dari jadwal, bisa diubah manual) ── */}
+            {/* Tanggal */}
             <div style={{ gridColumn: "1/-1" }}>
               <label className="label">
                 Tanggal Pemeriksaan <span style={{ color: "#dc2626" }}>*</span>
-                {pemForm.kegiatan && (
-                  <span style={{ color: "#9aab9a", fontWeight: 400, marginLeft: 6, fontSize: 11 }}>
-                    (otomatis dari jadwal, bisa diubah)
-                  </span>
-                )}
+                {pemForm.kegiatan && <span style={{ color: "#9aab9a", fontWeight: 400, marginLeft: 6, fontSize: 11 }}>(otomatis dari jadwal, bisa diubah)</span>}
               </label>
               <div style={{ position: "relative" }}>
                 <Calendar size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input
-                  type="date"
-                  name="tanggal"
-                  value={pemForm.tanggal}
-                  onChange={handleChange}
-                  className={`input-field${pemErr.tanggal ? " error" : ""}`}
-                />
+                <input type="date" name="tanggal" value={pemForm.tanggal ?? ""} onChange={handleChange}
+                  className={`input-field${pemErr.tanggal ? " error" : ""}`} />
               </div>
               {pemErr.tanggal && <p style={{ color: "#dc2626", fontSize: 11, marginTop: 4 }}>⚠ {pemErr.tanggal}</p>}
             </div>
@@ -349,7 +581,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               <label className="label">Berat Badan (kg) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <div style={{ position: "relative" }}>
                 <Scale size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="number" step="0.1" min="0" name="bb" value={pemForm.bb} onChange={handleChange} placeholder="cth: 55.5" className="input-field" />
+                <input type="number" step="0.1" min="0" name="bb" value={pemForm.bb ?? ""} onChange={handleChange} placeholder="cth: 55.5" className="input-field" />
               </div>
             </div>
 
@@ -358,7 +590,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               <label className="label">Tinggi Badan (cm) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <div style={{ position: "relative" }}>
                 <Ruler size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="number" step="0.1" min="0" name="tb" value={pemForm.tb} onChange={handleChange} placeholder="cth: 155" className="input-field" />
+                <input type="number" step="0.1" min="0" name="tb" value={pemForm.tb ?? ""} onChange={handleChange} placeholder="cth: 155" className="input-field" />
               </div>
             </div>
 
@@ -367,7 +599,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               <label className="label">Lingkar Perut (cm) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <div style={{ position: "relative" }}>
                 <Ruler size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="number" step="0.1" min="0" name="lingkarPerut" value={pemForm.lingkarPerut} onChange={handleChange} placeholder="cth: 80" className="input-field" />
+                <input type="number" step="0.1" min="0" name="lingkarPerut" value={pemForm.lingkarPerut ?? ""} onChange={handleChange} placeholder="cth: 80" className="input-field" />
               </div>
             </div>
 
@@ -376,7 +608,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               <label className="label">Tensi (mmHg) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <div style={{ position: "relative" }}>
                 <Heart size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="number" step="1" min="0" name="tensi" value={pemForm.tensi} onChange={handleChange} placeholder="cth: 120" className="input-field" />
+                <input type="number" step="1" min="0" name="tensi" value={pemForm.tensi ?? ""} onChange={handleChange} placeholder="cth: 120" className="input-field" />
               </div>
             </div>
 
@@ -385,15 +617,28 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
               <label className="label">Gula Darah (mg/dL) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
               <div style={{ position: "relative" }}>
                 <Droplets size={14} color="#9aab9a" style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                <input type="number" step="1" min="0" name="gulaDarah" value={pemForm.gulaDarah} onChange={handleChange} placeholder="cth: 100" className="input-field" />
+                <input type="number" step="1" min="0" name="gulaDarah" value={pemForm.gulaDarah ?? ""} onChange={handleChange} placeholder="cth: 100" className="input-field" />
               </div>
             </div>
-
           </div>
+
+          {/* Preview Status Tensi — seperti preview stunting di balita */}
+          {tensiPreview && (
+            <div style={{ marginTop: 16, background: tensiPreview.bg, border: `1.5px solid ${tensiPreview.color}40`, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 20 }}>{tensiPreview.icon}</span>
+              <div>
+                <p style={{ fontSize: 11, color: tensiPreview.color, fontWeight: 700 }}>PREDIKSI STATUS TENSI</p>
+                <p style={{ fontSize: 14, fontWeight: 800, color: tensiPreview.color }}>
+                  {tensiPreview.label}
+                  <span style={{ fontWeight: 400, fontSize: 12 }}> ({pemForm.tensi} mmHg)</span>
+                </p>
+              </div>
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: 10, marginTop: 24, paddingTop: 16, borderTop: "1px solid #f0f6f2" }}>
             <button type="button" onClick={onClose} className="btn-outline" style={{ flex: "0 0 auto" }}>Batal</button>
-            <button type="submit" onClick={handleSubmit} disabled={saving} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: saving ? "#b5ceba" : "#2d7a4f", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", transition: "background 0.2s" }}>
+            <button type="submit" onClick={handleSubmit} disabled={saving} style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 7, background: saving ? "#b5ceba" : "#2d7a4f", color: "#fff", border: "none", borderRadius: 10, padding: "12px", fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", transition: "background 0.2s", boxShadow: saving ? "none" : "0 4px 14px rgba(124,58,237,0.28)" }}>
               {saving
                 ? <><div style={{ width: 15, height: 15, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} /> Menyimpan…</>
                 : <><Save size={15} /> {isEdit ? "Simpan Perubahan" : "Simpan Pemeriksaan"}</>}
@@ -409,9 +654,8 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
    HALAMAN UTAMA
 ══════════════════════════════════════════ */
 export default function PosyanduLansiaPage() {
-  const [tab, setTab] = useState("data"); // "data" | "pemeriksaan"
+  const [tab, setTab] = useState("data");
 
-  /* ── state data lansia ── */
   const [lansiaList, setLansiaList]       = useState([]);
   const [loadingLansia, setLoadingLansia] = useState(true);
   const [showModal, setShowModal]         = useState(false);
@@ -423,17 +667,23 @@ export default function PosyanduLansiaPage() {
   const [sortAsc, setSortAsc]             = useState(true);
   const [toast, setToast]                 = useState(null);
 
-  /* ── state pemeriksaan ── */
-  const [pemList, setPemList]                   = useState([]);
-  const [loadingPem, setLoadingPem]             = useState(true);
-  const [showPemForm, setShowPemForm]           = useState(false);
-  const [editPem, setEditPem]                   = useState(null);
-  const [savingPem, setSavingPem]               = useState(false);
-  const [deletePemTarget, setDeletePemTarget]   = useState(null);
-  const [deletingPem, setDeletingPem]           = useState(false);
-  const [searchPem, setSearchPem]               = useState("");
+  const [pemList, setPemList]                 = useState([]);
+  const [loadingPem, setLoadingPem]           = useState(true);
+  const [showPemForm, setShowPemForm]         = useState(false);
+  const [editPem, setEditPem]                 = useState(null);
+  const [savingPem, setSavingPem]             = useState(false);
+  const [deletePemTarget, setDeletePemTarget] = useState(null);
+  const [deletingPem, setDeletingPem]         = useState(false);
+  const [searchPem, setSearchPem]             = useState("");
+  const [detailData, setDetailData]           = useState(null);
+   // ← state detail modal
 
-  useEffect(() => { loadAll(); }, []);
+  
+
+  useEffect(() => { 
+
+    loadAll(); }, []);
+
 
   async function loadAll() {
     setLoadingLansia(true);
@@ -455,67 +705,50 @@ export default function PosyanduLansiaPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-  /* ── handlers lansia ── */
   async function handleCreate(formData) {
-    await createLansia(formData);
-    await loadAll();
-    setShowModal(false);
-    showToast("Data lansia berhasil ditambahkan");
+    try {
+      await createLansia(formData);
+      await loadAll();
+      setShowModal(false);
+      showToast("Data lansia berhasil ditambahkan");
+    } catch (err) {
+      const msg = err?.message || "";
+      if (msg.includes("Unique constraint") && msg.includes("nik")) {
+        throw new Error("NIK sudah terdaftar. Gunakan NIK yang berbeda atau cek data yang sudah ada.");
+      } else if (msg.includes("Unique constraint")) {
+        throw new Error("Data duplikat terdeteksi. Periksa kembali data yang dimasukkan.");
+      } else {
+        throw new Error("Gagal menyimpan data. Coba lagi.");
+      }
+    }
   }
-  async function handleUpdate(formData) {
-    await updateLansia(editData.id, formData);
-    await loadAll();
-    setEditData(null); setShowModal(false);
-    showToast("Data lansia berhasil diperbarui");
-  }
+  async function handleUpdate(formData)  { await updateLansia(editData.id, formData); await loadAll(); setEditData(null); setShowModal(false); showToast("Data lansia berhasil diperbarui"); }
   async function handleDelete() {
     setDeleting(true);
-    try {
-      await deleteLansia(deleteTarget.id);
-      await loadAll();
-      setDeleteTarget(null);
-      showToast("Data lansia berhasil dihapus");
-    } catch (err) {
-      showToast(err?.message || "Gagal menghapus data lansia", "error");
-    } finally { setDeleting(false); }
+    try { await deleteLansia(deleteTarget.id); await loadAll(); setDeleteTarget(null); showToast("Data lansia berhasil dihapus"); }
+    catch (err) { showToast(err?.message || "Gagal menghapus data lansia", "error"); }
+    finally { setDeleting(false); }
   }
 
-  /* ── handlers pemeriksaan ── */
   async function handlePemSubmit(pemForm) {
     setSavingPem(true);
     try {
-      if (editPem) {
-        await updatePosyanduLansia(editPem.id, pemForm);
-        showToast("Pemeriksaan berhasil diperbarui");
-      } else {
-        await createPosyanduLansia(pemForm);
-        showToast("Pemeriksaan berhasil disimpan");
-      }
-      await loadAll();
-      setShowPemForm(false);
-      setEditPem(null);
-    } catch {
-      showToast("Gagal menyimpan pemeriksaan", "error");
-    } finally { setSavingPem(false); }
-  }
-  async function handleDeletePem() {
-    setDeletingPem(true);
-    try {
-      await deletePosyanduLansia(deletePemTarget.id);
-      await loadAll();
-      setDeletePemTarget(null);
-      showToast("Pemeriksaan berhasil dihapus");
-    } catch {
-      showToast("Gagal menghapus pemeriksaan", "error");
-    } finally { setDeletingPem(false); }
+      if (editPem) { await updatePosyanduLansia(editPem.id, pemForm); showToast("Pemeriksaan berhasil diperbarui"); }
+      else         { await createPosyanduLansia(pemForm);              showToast("Pemeriksaan berhasil disimpan"); }
+      await loadAll(); setShowPemForm(false); setEditPem(null);
+    } catch { showToast("Gagal menyimpan pemeriksaan", "error"); }
+    finally { setSavingPem(false); }
   }
 
-  /* ── computed ── */
+  async function handleDeletePem() {
+    setDeletingPem(true);
+    try { await deletePosyanduLansia(deletePemTarget.id); await loadAll(); setDeletePemTarget(null); showToast("Pemeriksaan berhasil dihapus"); }
+    catch { showToast("Gagal menghapus pemeriksaan", "error"); }
+    finally { setDeletingPem(false); }
+  }
+
   const filtered = lansiaList
-    .filter(l =>
-      l.nama?.toLowerCase().includes(searchLansia.toLowerCase()) ||
-      l.nik?.includes(searchLansia)
-    )
+    .filter(l => l.nama?.toLowerCase().includes(searchLansia.toLowerCase()) || l.nik?.includes(searchLansia))
     .sort((a, b) => {
       const va = a[sortField] ?? "", vb = b[sortField] ?? "";
       if (typeof va === "string") return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -552,7 +785,7 @@ export default function PosyanduLansiaPage() {
         @keyframes spin    { to{transform:rotate(360deg)} }
         @keyframes toastIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
         @keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
-
+        @keyframes popIn { from{opacity:0;transform:translate(-50%,-50%) scale(0.92)} to{opacity:1;transform:translate(-50%,-50%) scale(1)} }
         .th-btn { background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#9aab9a;font-family:'Plus Jakarta Sans',sans-serif;padding:0;white-space:nowrap; }
         .th-btn:hover { color:#4a7a5a; }
         .tr-row { border-bottom:1px solid #f0f6f2;transition:background 0.15s; }
@@ -561,42 +794,45 @@ export default function PosyanduLansiaPage() {
         .search-inp { border:1.5px solid #e4ede6;border-radius:10px;padding:8px 12px 8px 36px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;width:240px;transition:border-color 0.2s; }
         .search-inp:focus { border-color:#2d7a4f; }
         .search-inp::placeholder { color:#9aab9a; }
-        .btn-tambah { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(45,122,79,0.25); }
-        .btn-tambah:hover { background:#246240;transform:translateY(-1px); }
-        .btn-edit  { display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
-        .btn-edit:hover  { background:#fde68a; }
-        .btn-hapus { display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
-        .btn-hapus:hover { background:#fecaca; }
+        .btn-tambah { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,58,237,0.25); }
+        .btn-tambah:hover { background:#6d28d9;transform:translateY(-1px); }
+        .btn-edit   { display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
+        .btn-edit:hover   { background:#fde68a; }
+        .btn-hapus  { display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
+        .btn-hapus:hover  { background:#fecaca; }
+        .btn-detail { display:inline-flex;align-items:center;gap:5px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
+        .btn-detail:hover { background:#dbeafe; }
         .stat-card { background:#fff;border:1px solid #e4ede6;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;transition:transform 0.18s; }
         .stat-card:hover { transform:translateY(-2px); }
         .input-field { width:100%;border:1.5px solid #e4ede6;border-radius:10px;padding:10px 12px 10px 38px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
-        .input-field:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,0.1); }
+        .input-field:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
         .input-field::placeholder { color:#b5ceba; }
         .input-field.error { border-color:#dc2626; }
-        .input-bare { width:100%;border:1.5px solid #e4ede6;border-radius:10px;padding:10px 12px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
-        .input-bare:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,0.1); }
-        .input-bare::placeholder { color:#b5ceba; }
-        .input-bare.error { border-color:#dc2626; }
         .label { display:block;font-size:13px;font-weight:700;color:#3d5542;margin-bottom:6px; }
-        .btn-outline { display:inline-flex;align-items:center;gap:7px;background:#fff;color:#2d7a4f;border:1.5px solid #b8ddc5;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s; }
-        .btn-outline:hover { background:#e8f5ed; }
-        .btn-primary { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(45,122,79,0.28); }
-        .btn-primary:hover { background:#246240;transform:translateY(-1px); }
+        .btn-outline { display:inline-flex;align-items:center;gap:7px;background:#fff;color:#2d7a4f;border:1.5px solid #ddd6fe;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s; }
+        .btn-outline:hover { background:#f5f3ff; }
+        .btn-primary { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,58,237,0.28); }
+        .btn-primary:hover { background:#6d28d9;transform:translateY(-1px); }
+        .card { background:#fff;border:1px solid #e4ede6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04); }
         .section-title { font-size:15px;font-weight:700;color:#1f2d1f; }
         .section-sub   { font-size:12px;color:#9aab9a;margin-top:2px; }
-        .badge-green  { background:#e8f5ed;color:#2d7a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-red    { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-yellow { background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+        .badge-normal  { background:#e8f5ed;color:#2d7a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+        .badge-prehiper{ background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+        .badge-tinggi  { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+        .badge-nodata  { background:#f3f4f6;color:#9ca3af;font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px; }
+        .badge-laki    { display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700; }
+        .badge-perempuan { display:inline-flex;align-items:center;gap:4px;background:#fce7f3;color:#be185d;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700; }
+        .badge-null    { display:inline-flex;align-items:center;background:#f3f4f6;color:#9ca3af;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600; }
       `}</style>
 
-      {/* ── TOAST ── */}
+      {/* TOAST */}
       {toast && (
         <div style={{ position: "fixed", bottom: 28, right: 28, zIndex: 300, background: toast.type === "error" ? "#dc2626" : "#2d7a4f", color: "#fff", padding: "12px 20px", borderRadius: 12, fontSize: 14, fontWeight: 600, boxShadow: "0 8px 24px rgba(0,0,0,0.15)", animation: "toastIn 0.3s ease", display: "flex", alignItems: "center", gap: 8 }}>
           {toast.type === "error" ? "⚠" : "✓"} {toast.msg}
         </div>
       )}
 
-      {/* ── TAB BAR ── */}
+      {/* TAB BAR */}
       <div style={{ display: "flex", gap: 6, background: "#fff", border: "1px solid #e4ede6", borderRadius: 14, padding: 5, width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {[
           { id: "data",        label: "Data Lansia",       icon: Users    },
@@ -609,7 +845,7 @@ export default function PosyanduLansiaPage() {
             color: tab === id ? "#fff" : "#6b7c6b",
             border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14,
             fontFamily: "'Plus Jakarta Sans',sans-serif",
-            boxShadow: tab === id ? "0 2px 8px rgba(45,122,79,0.25)" : "none",
+            boxShadow: tab === id ? "0 2px 8px rgba(124,58,237,0.25)" : "none",
             transition: "all 0.18s",
           }}>
             <Icon size={15} /> {label}
@@ -617,12 +853,12 @@ export default function PosyanduLansiaPage() {
         ))}
       </div>
 
-      {/* ══════════ TAB DATA LANSIA ══════════ */}
+      {/* TAB DATA LANSIA */}
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {[
-              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#e8f5ed" },
+              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#f3f0ff" },
               { icon: AlertTriangle, label: "Risiko Tinggi",  value: loadingLansia ? "–" : risikoTinggi, sub: "Tensi/gula darah tinggi", accent: "#be185d", bg: "#fce7f3" },
               { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",   accent: "#d97706", bg: "#fef3c7" },
             ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
@@ -660,14 +896,15 @@ export default function PosyanduLansiaPage() {
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
                     {[
-                      { label: "No",          field: null },
-                      { label: "NIK",         field: "nik" },
-                      { label: "Nama Lansia", field: "nama" },
-                      { label: "Tgl Lahir",   field: "tglLahir" },
-                      { label: "Usia",        field: null },
-                      { label: "No Telp",     field: "noTelp" },
-                      { label: "Alamat",      field: "alamat" },
-                      { label: "Aksi",        field: null },
+                      { label: "No",            field: null },
+                      { label: "NIK",           field: "nik" },
+                      { label: "Nama Lansia",   field: "nama" },
+                      { label: "Tgl Lahir",     field: "tglLahir" },
+                      { label: "Usia",          field: null },
+                      { label: "No Telp",       field: "noTelp" },
+                      { label: "Alamat",        field: "alamat" },
+                      { label: "Jenis Kelamin", field: "jenisKelamin" },
+                      { label: "Aksi",          field: null },
                     ].map(({ label, field }) => (
                       <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
                         {field
@@ -680,7 +917,7 @@ export default function PosyanduLansiaPage() {
                 </thead>
                 <tbody>
                   {loadingLansia && (
-                    <tr><td colSpan={8} style={{ padding: "44px", textAlign: "center" }}>
+                    <tr><td colSpan={9} style={{ padding: "44px", textAlign: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "#9aab9a" }}>
                         <div style={{ width: 18, height: 18, border: "2.5px solid #e4ede6", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                         Memuat data…
@@ -688,9 +925,9 @@ export default function PosyanduLansiaPage() {
                     </td></tr>
                   )}
                   {!loadingLansia && filtered.length === 0 && (
-                    <tr><td colSpan={8} style={{ padding: "52px", textAlign: "center" }}>
+                    <tr><td colSpan={9} style={{ padding: "52px", textAlign: "center" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-                        <div style={{ background: "#e8f5ed", borderRadius: "50%", padding: 18 }}><Users size={30} color="#b5ceba" /></div>
+                        <div style={{ background: "#f3f0ff", borderRadius: "50%", padding: 18 }}><Users size={30} color="#c4b5fd" /></div>
                         <p style={{ color: "#9aab9a", fontSize: 14, fontWeight: 500 }}>{searchLansia ? "Tidak ada data yang cocok" : "Belum ada data lansia"}</p>
                         {!searchLansia && <button className="btn-tambah" onClick={() => { setEditData(null); setShowModal(true); }}><Plus size={14} /> Tambah Lansia Pertama</button>}
                       </div>
@@ -702,7 +939,7 @@ export default function PosyanduLansiaPage() {
                       <td style={{ padding: "12px 14px", fontFamily: "monospace", fontSize: 12, color: "#6b7c6b" }}>{lansia.nik}</td>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8f5ed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#2d7a4f", flexShrink: 0 }}>
+                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#f3f0ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: "#2d7a4f", flexShrink: 0 }}>
                             {lansia.nama?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                           </div>
                           <span style={{ fontWeight: 600, color: "#1f2d1f" }}>{lansia.nama}</span>
@@ -715,8 +952,16 @@ export default function PosyanduLansiaPage() {
                         <span style={{ display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{lansia.alamat || "-"}</span>
                       </td>
                       <td style={{ padding: "12px 14px" }}>
+                        {lansia.jenisKelamin === "Laki-laki"
+                          ? <span className="badge-laki">♂ Laki-laki</span>
+                          : lansia.jenisKelamin === "Perempuan"
+                          ? <span className="badge-perempuan">♀ Perempuan</span>
+                          : <span className="badge-null">-</span>
+                        }
+                      </td>
+                      <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button className="btn-edit" onClick={() => { setEditData(lansia); setShowModal(true); }}><Pencil size={12} /> Edit</button>
+                          <button className="btn-edit"  onClick={() => { setEditData(lansia); setShowModal(true); }}><Pencil size={12} /> Edit</button>
                           <button className="btn-hapus" onClick={() => setDeleteTarget(lansia)}><Trash2 size={12} /> Hapus</button>
                         </div>
                       </td>
@@ -735,7 +980,7 @@ export default function PosyanduLansiaPage() {
         </div>
       )}
 
-      {/* ══════════ TAB PEMERIKSAAN ══════════ */}
+      {/* TAB PEMERIKSAAN */}
       {tab === "pemeriksaan" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div className="card" style={{ padding: "18px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
@@ -759,14 +1004,14 @@ export default function PosyanduLansiaPage() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
-                    {["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut (cm)","Tensi (mmHg)","Gula Darah (mg/dL)","Aksi"].map(h => (
+                    {["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut (cm)","Tensi (mmHg)","Gula Darah (mg/dL)","Status","Aksi"].map(h => (
                       <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 12, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loadingPem && (
-                    <tr><td colSpan={10} style={{ padding: "44px", textAlign: "center" }}>
+                    <tr><td colSpan={11} style={{ padding: "44px", textAlign: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "#9aab9a" }}>
                         <div style={{ width: 18, height: 18, border: "2.5px solid #e4ede6", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                         Memuat data…
@@ -774,11 +1019,10 @@ export default function PosyanduLansiaPage() {
                     </td></tr>
                   )}
                   {!loadingPem && filteredPem.length === 0 && (
-                    <tr><td colSpan={10} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
+                    <tr><td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
                   )}
                   {!loadingPem && filteredPem.map((p, i) => {
-                    const risikoTensi = p.tensi && p.tensi > 140;
-                    const risikoGula  = p.gulaDarah && p.gulaDarah > 200;
+                    const tensiSt = p.tensi ? getStatusTensi(parseFloat(p.tensi)) : null;
                     return (
                       <tr key={p.id} className="tr-row">
                         <td style={{ padding: "12px 14px", color: "#9aab9a" }}>{i + 1}</td>
@@ -788,12 +1032,27 @@ export default function PosyanduLansiaPage() {
                         <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.bb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarPerut ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 700, color: risikoTensi ? "#dc2626" : "#1f2d1f" }}>{p.tensi ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 700, color: risikoGula ? "#dc2626" : "#1f2d1f" }}>{p.gulaDarah ?? "-"}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: tensiSt ? tensiSt.color : "#1f2d1f" }}>{p.tensi ?? "-"}</td>
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: p.gulaDarah > 200 ? "#dc2626" : p.gulaDarah >= 100 ? "#d97706" : "#1f2d1f" }}>{p.gulaDarah ?? "-"}</td>
+
+                        {/* ── Kolom Status Tensi ── */}
+                        <td style={{ padding: "12px 14px" }}>
+                          {tensiSt
+                            ? tensiSt.status === "tinggi2" || tensiSt.status === "tinggi1"
+                              ? <span className="badge-tinggi">{tensiSt.icon} {tensiSt.label}</span>
+                              : tensiSt.status === "prehiper" || tensiSt.status === "rendah"
+                              ? <span className="badge-prehiper">{tensiSt.icon} {tensiSt.label}</span>
+                              : <span className="badge-normal">{tensiSt.icon} {tensiSt.label}</span>
+                            : <span className="badge-nodata">-</span>
+                          }
+                        </td>
+
+                        {/* ── Kolom Aksi: Edit + Hapus + Detail ── */}
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", gap: 6 }}>
-                            <button className="btn-edit" onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
-                            <button className="btn-hapus" onClick={() => setDeletePemTarget(p)}><Trash2 size={12} /> Hapus</button>
+                            <button className="btn-edit"   onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
+                            <button className="btn-hapus"  onClick={() => setDeletePemTarget(p)}><Trash2 size={12} /> Hapus</button>
+                            <button className="btn-detail" onClick={() => setDetailData(p)}><Info size={12} /> Detail</button>
                           </div>
                         </td>
                       </tr>
@@ -837,6 +1096,14 @@ export default function PosyanduLansiaPage() {
           loading={deletingPem}
           onClose={() => setDeletePemTarget(null)}
           onConfirm={handleDeletePem}
+        />
+      )}
+
+      {/* ── Detail Modal ── */}
+      {detailData && (
+        <DetailModal
+          data={detailData}
+          onClose={() => setDetailData(null)}
         />
       )}
     </div>

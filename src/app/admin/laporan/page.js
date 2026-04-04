@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { getBalita } from "@/services/balitaService";
 import { getLansia } from "@/services/lansiaService";
 import { getPosyanduBalita, getPosyanduBalitaByBulan } from "@/services/posyanduBalitaService";
@@ -109,9 +110,11 @@ export default function LaporanPage() {
 
   const printDataRef = useRef();
   const printPosRef  = useRef();
+  
 
   /* ── Load data section 1 saat kategori berubah ── */
   useEffect(() => {
+
     if (!kategoriData) return;
     setLoadingData(true);
     setPageData(1);
@@ -134,6 +137,7 @@ export default function LaporanPage() {
 
   /* ── Load data section 2 saat kategori berubah ── */
   useEffect(() => {
+
     if (!kategoriPos) return;
     setLoadingPos(true);
     setPosData([]);

@@ -25,7 +25,8 @@ export async function createBalita(data) {
       namaIbu: data.namaIbu,
       alamat: data.alamat,
       noTelp: data.noTelp || null,
-      tglLahir: new Date(data.tglLahir)
+      tglLahir: new Date(data.tglLahir),
+      jenisKelamin: data.jenisKelamin
     }
   });
 }
@@ -39,7 +40,8 @@ export async function updateBalita(id, data) {
       namaIbu: data.namaIbu,
       alamat: data.alamat,
       noTelp: data.noTelp || null,
-      tglLahir: new Date(data.tglLahir)
+      tglLahir: new Date(data.tglLahir),
+      jenisKelamin: data.jenisKelamin
     }
   });
 }

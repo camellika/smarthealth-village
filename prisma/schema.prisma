@@ -42,7 +42,7 @@ model Balita {
   alamat    String
   noTelp    String?
   tglLahir  DateTime
-
+  jenisKelamin  String?   // ✅ sementara optional
   user      User?
   riwayat   PosyanduBalita[]
 }
@@ -57,6 +57,7 @@ model Lansia {
   alamat    String
   noTelp    String?
   tglLahir  DateTime
+  jenisKelamin  String?   // ✅ sementara optional
 
   user      User?
   riwayat   PosyanduLansia[]
