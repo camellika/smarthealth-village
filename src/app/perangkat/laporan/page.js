@@ -282,7 +282,7 @@ export default function LaporanPage() {
         item.bb ?? "-",
         item.tb ?? "-",
         item.lingkarKepala ?? "-",
-        item.lingkarLengan ?? "-",
+        
       ];
     } else if (kategori === "lansia-posyandu") {
       cells = [
@@ -791,7 +791,7 @@ export default function LaporanPage() {
                                         { label: "BB (kg)",         field: "bb"            },
                                         { label: "TB (cm)",         field: "tb"            },
                                         { label: "Lk. Kepala (cm)", field: "lingkarKepala" },
-                                        { label: "Lk. Lengan (cm)", field: "lingkarLengan" },
+                                        
                                       ]
                                     : [
                                         { label: "No",                 field: null           },
@@ -828,7 +828,7 @@ export default function LaporanPage() {
                                     <td style={{ padding: "12px 14px", fontWeight: 700, color: p.bb && p.bb < 10 ? "#d97706" : "#1f2d1f" }}>{p.bb ?? "-"}</td>
                                     <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
                                     <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarLengan ?? "-"}</td>
+                                  
                                   </tr>
                                 ))}
 

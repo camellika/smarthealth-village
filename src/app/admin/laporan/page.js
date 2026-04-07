@@ -337,7 +337,7 @@ export default function LaporanPage() {
     const getHeaders = () => {
       if (kategori === "balita-data")    return ["No","NIK","Nama Balita","Nama Ibu","Tgl Lahir","Usia","No Telp","Alamat"];
       if (kategori === "lansia-data")    return ["No","NIK","Nama Lansia","Tgl Lahir","Usia","No Telp","Alamat"];
-      if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala (cm)","Lk. Lengan (cm)","Status Stunting"];
+      if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala (cm)","Status Stunting"];
       if (kategori === "lansia-posyandu") return ["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut (cm)","Tensi (mmHg)","Status Tensi","Gula Darah (mg/dL)","Status Gula"];
       return [];
     };
@@ -353,7 +353,7 @@ export default function LaporanPage() {
         const stunting  = hitungStatusStunting(item.tb, usiaBulan, item.balita?.jenisKelamin);
         cells = [
           i+1, item.balita?.nama??"-", item.kegiatan??"-", formatDate(item.tanggal),
-          item.bb??"-", item.tb??"-", item.lingkarKepala??"-", item.lingkarLengan??"-",
+          item.bb??"-", item.tb??"-", item.lingkarKepala??"-",
           stunting ? `${stunting.icon} ${stunting.label} (Z: ${stunting.zScore})` : "-",
         ];
       } else if (kategori === "lansia-posyandu") {
@@ -680,7 +680,6 @@ export default function LaporanPage() {
                                     { label: "BB (kg)",          field: "bb"            },
                                     { label: "TB (cm)",          field: "tb"            },
                                     { label: "Lk. Kepala (cm)",  field: "lingkarKepala" },
-                                    { label: "Lk. Lengan (cm)",  field: "lingkarLengan" },
                                     { label: "Status Stunting",  field: null            },
                                   ].map(({ label, field }) => (
                                     <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
@@ -730,7 +729,6 @@ export default function LaporanPage() {
                                       <td style={{ padding: "12px 14px", fontWeight: 700, color: p.bb && p.bb < 10 ? "#d97706" : "#1f2d1f" }}>{p.bb ?? "-"}</td>
                                       <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
                                       <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarLengan ?? "-"}</td>
                                       {/* ── STATUS STUNTING ── */}
                                       <td style={{ padding: "10px 14px" }}>
                                         <StatusBadge status={stunting} />
