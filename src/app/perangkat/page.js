@@ -60,17 +60,9 @@ export default function DashboardPage() {
   const [pemLansia,   setPemLansia]   = useState([]);
   const [jadwalDekat, setJadwalDekat] = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
+
 
   useEffect(() => {
-
-    const token = localStorage.getItem("token"); // sesuaikan key-nya
-      if (!token) {
-        router.replace("/login"); // langsung redirect ke login
-      } else {
-          setAuthChecked(true); // baru tampilkan halaman
-      }
       
     Promise.all([
       getBalita(),
@@ -88,8 +80,7 @@ export default function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, []);
-
-  if (!authChecked) return null;
+ 
 
   /* ── computed balita ── */
   const totalBalita  = balitaList.length;

@@ -4,7 +4,7 @@ import { Facebook, Instagram, Twitter } from "lucide-react";
 import {
   User, HeartPulse, TrendingUp, Users, Baby, Activity,
   ShieldCheck, Stethoscope, ChevronRight, MapPin, Phone,
-  Mail, Droplets, Scale, TrendingDown
+  Mail, Droplets, Scale, TrendingDown, Calendar, Clock
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -16,6 +16,7 @@ import { getBalita } from "@/services/balitaService";
 import { getLansia } from "@/services/lansiaService";
 import { getPosyanduBalita } from "@/services/posyanduBalitaService";
 import { getPosyanduLansia } from "@/services/posyanduLansiaService";
+import { getJadwalTerdekat } from "@/services/penjadwalanService";
 
 /* ══════════════════════════════════════════
    TABEL Z-SCORE WHO TB/U
@@ -72,7 +73,7 @@ function hitungStatusStunting(tb, usiaBulan, jenisKelamin) {
   const row   = tabel.find(r => r[0] === bulan);
   if (!row) return null;
   const [, median, sd2, sd3] = row;
-  const sd = median - sd2; // ✅ SD = selisih median dengan -2SD
+  const sd = median - sd2;
   const z  = sd > 0 ? (tb - median) / sd : 0;
   if (z < -3) return "severely_stunting";
   if (z < -2) return "stunting";
@@ -93,6 +94,26 @@ function getStatusGula(gula) {
   if (gula >= 200) return { label: "Diabetes",     group: "diabetes" };
   if (gula >= 100) return { label: "Pra-Diabetes", group: "pra"      };
   return              { label: "Normal",        group: "normal"   };
+}
+
+/* ── Format tanggal ── */
+const HARI_ID       = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+const BULAN_ID_FULL = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+function formatTanggal(tgl) {
+  const d = new Date(tgl);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dDay = new Date(d);
+  dDay.setHours(0, 0, 0, 0);
+  return {
+    hari:      HARI_ID[d.getDay()],
+    tanggal:   d.getDate(),
+    bulan:     BULAN_ID_FULL[d.getMonth()],
+    tahun:     d.getFullYear(),
+    isHariIni: dDay.getTime() === today.getTime(),
+    isAkan:    dDay.getTime() > today.getTime(),
+  };
 }
 
 /* ── 6 bulan terakhir ── */
@@ -217,6 +238,109 @@ function StatCard({ icon: Icon, title, value, sub, accent, lightBg }) {
 }
 
 /* ══════════════════════════════════════════
+   JADWAL CARD COMPONENT
+══════════════════════════════════════════ */
+function JadwalCard({ jadwal }) {
+  const fmt = formatTanggal(jadwal.tanggal);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: "#fff",
+        border: fmt.isHariIni ? "2px solid #2d7a4f" : "1px solid #dde8de",
+        borderRadius: 18,
+        padding: "20px 22px",
+        boxShadow: hovered
+          ? "0 12px 32px rgba(45,122,79,0.14)"
+          : fmt.isHariIni
+            ? "0 4px 20px rgba(45,122,79,0.13)"
+            : "0 2px 8px rgba(0,0,0,0.04)",
+        position: "relative",
+        overflow: "hidden",
+        transform: hovered ? "translateY(-4px)" : "translateY(0)",
+        transition: "all 0.25s ease",
+        cursor: "default",
+      }}
+    >
+      {/* Top accent bar */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: 4,
+        background: fmt.isHariIni
+          ? "linear-gradient(90deg, #2d7a4f, #3a9e6e)"
+          : "linear-gradient(90deg, #c8e6d4, #e4ede6)",
+        borderRadius: "18px 18px 0 0"
+      }} />
+
+      {/* Date bubble — top right */}
+      <div style={{
+        position: "absolute", top: 16, right: 16,
+        background: fmt.isHariIni ? "#e8f5ed" : "#f5f7f4",
+        border: `1px solid ${fmt.isHariIni ? "#b8ddc5" : "#dde8de"}`,
+        borderRadius: 12,
+        padding: "6px 12px",
+        textAlign: "center",
+        minWidth: 52,
+      }}>
+        <div style={{ fontSize: 20, fontWeight: 800, color: fmt.isHariIni ? "#2d7a4f" : "#4a5e4a", lineHeight: 1 }}>
+          {fmt.tanggal}
+        </div>
+        <div style={{ fontSize: 10, fontWeight: 600, color: fmt.isHariIni ? "#3a9e6e" : "#9aab9a", textTransform: "uppercase", letterSpacing: 0.5, marginTop: 2 }}>
+          {fmt.bulan.slice(0, 3)}
+        </div>
+      </div>
+
+      {/* Badge */}
+      <div style={{ marginBottom: 12, paddingRight: 72 }}>
+        {fmt.isHariIni ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#e8f5ed", border: "1px solid #b8ddc5", borderRadius: 50, padding: "3px 10px" }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#2d7a4f", animation: "pulse-dot 2s ease-in-out infinite" }} />
+            <span style={{ color: "#2d7a4f", fontSize: 11, fontWeight: 700 }}>HARI INI</span>
+          </div>
+        ) : fmt.isAkan ? (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fef3c7", border: "1px solid #fde68a", borderRadius: 50, padding: "3px 10px" }}>
+            <Clock size={10} color="#d97706" />
+            <span style={{ color: "#d97706", fontSize: 11, fontWeight: 700 }}>AKAN DATANG</span>
+          </div>
+        ) : (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#f5f7f4", border: "1px solid #dde8de", borderRadius: 50, padding: "3px 10px" }}>
+            <span style={{ color: "#9aab9a", fontSize: 11, fontWeight: 700 }}>SELESAI</span>
+          </div>
+        )}
+      </div>
+
+      {/* Kegiatan */}
+      <h4 style={{ fontSize: 15, fontWeight: 700, color: "#1f2d1f", marginBottom: 14, lineHeight: 1.4, paddingRight: 72 }}>
+        {jadwal.kegiatan}
+      </h4>
+
+      {/* Divider */}
+      <div style={{ height: 1, background: "#f0f4f1", marginBottom: 14 }} />
+
+      {/* Info rows */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <div style={{ background: "#e8f5ed", borderRadius: 8, padding: "5px 6px", flexShrink: 0 }}>
+            <Calendar size={12} color="#2d7a4f" />
+          </div>
+          <span style={{ color: "#4a5e4a", fontSize: 13 }}>
+            {fmt.hari}, {fmt.tanggal} {fmt.bulan} {fmt.tahun}
+          </span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+          <div style={{ background: "#e8f5ed", borderRadius: 8, padding: "5px 6px", flexShrink: 0 }}>
+            <MapPin size={12} color="#2d7a4f" />
+          </div>
+          <span style={{ color: "#4a5e4a", fontSize: 13 }}>{jadwal.tempat}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
    HALAMAN UTAMA
 ══════════════════════════════════════════ */
 export default function Home() {
@@ -227,6 +351,7 @@ export default function Home() {
   const [lansiaList, setLansiaList]       = useState([]);
   const [pemBalita, setPemBalita]         = useState([]);
   const [pemLansia, setPemLansia]         = useState([]);
+  const [jadwalList, setJadwalList]       = useState([]);
 
   /* computed stats */
   const [stats, setStats]                 = useState({ balita: 0, lansia: 0, stunting: 0, severelyStunting: 0, hipertensi: 0 });
@@ -238,13 +363,14 @@ export default function Home() {
   useEffect(() => {
     async function loadAll() {
       try {
-        const [bl, ll, pb, pl] = await Promise.all([
-          getBalita(), getLansia(), getPosyanduBalita(), getPosyanduLansia()
+        const [bl, ll, pb, pl, jd] = await Promise.all([
+          getBalita(), getLansia(), getPosyanduBalita(), getPosyanduLansia(), getJadwalTerdekat()
         ]);
         setBalitaList(bl);
         setLansiaList(ll);
         setPemBalita(pb);
         setPemLansia(pl);
+        setJadwalList(jd);
         computeStats(bl, ll, pb, pl);
       } catch (e) {
         console.error(e);
@@ -258,7 +384,7 @@ export default function Home() {
   function computeStats(bl, ll, pb, pl) {
     const bulan6 = get6BulanTerakhir();
 
-    /* ── Stunting: pakai pemeriksaan terakhir tiap balita ── */
+    /* ── Stunting ── */
     let stuntingCount = 0, severeCount = 0;
     bl.forEach(b => {
       const pemB = pb.filter(p => p.balitaId === b.id).sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
@@ -271,7 +397,7 @@ export default function Home() {
       if (s === "severely_stunting")  severeCount++;
     });
 
-    /* ── Hipertensi: pakai pemeriksaan terakhir tiap lansia ── */
+    /* ── Hipertensi ── */
     let hiperCount = 0;
     ll.forEach(l => {
       const pemL = pl.filter(p => p.lansiaId === l.id).sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
@@ -282,23 +408,20 @@ export default function Home() {
     });
 
     setStats({
-      balita:          bl.length,
-      lansia:          ll.length,
-      stunting:        stuntingCount,
+      balita:           bl.length,
+      lansia:           ll.length,
+      stunting:         stuntingCount,
       severelyStunting: severeCount,
-      hipertensi:      hiperCount,
+      hipertensi:       hiperCount,
     });
 
-    /* ── Chart stunting 6 bulan terakhir ── */
+    /* ── Chart stunting 6 bulan ── */
     const stuntingChart = bulan6.map(({ tahun, bulan, label }) => {
       let normal = 0, stunting = 0, severely = 0;
       bl.forEach(b => {
         const pemB = pb
           .filter(p => p.balitaId === b.id)
-          .filter(p => {
-            const d = new Date(p.tanggal);
-            return d.getFullYear() === tahun && d.getMonth() === bulan;
-          })
+          .filter(p => { const d = new Date(p.tanggal); return d.getFullYear() === tahun && d.getMonth() === bulan; })
           .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
         if (!pemB.length) return;
         const last = pemB[0];
@@ -313,7 +436,7 @@ export default function Home() {
     });
     setStuntingChartData(stuntingChart);
 
-    /* ── Chart hipertensi — distribusi semua pemeriksaan terakhir ── */
+    /* ── Chart hipertensi ── */
     const hiperMap = { Normal: 0, "Pra-Hipertensi": 0, "Hipertensi Tk. 1": 0, "Hipertensi Tk. 2": 0 };
     ll.forEach(l => {
       const pemL = pl.filter(p => p.lansiaId === l.id).sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
@@ -325,13 +448,13 @@ export default function Home() {
       else hiperMap["Normal"]++;
     });
     setHipertensiData([
-      { name: "Normal",          value: hiperMap["Normal"],          color: "#2d7a4f" },
-      { name: "Pra-Hipertensi",  value: hiperMap["Pra-Hipertensi"],  color: "#d97706" },
-      { name: "Hipertensi Tk.1", value: hiperMap["Hipertensi Tk. 1"],color: "#ea580c" },
-      { name: "Hipertensi Tk.2", value: hiperMap["Hipertensi Tk. 2"],color: "#dc2626" },
+      { name: "Normal",          value: hiperMap["Normal"],           color: "#2d7a4f" },
+      { name: "Pra-Hipertensi",  value: hiperMap["Pra-Hipertensi"],   color: "#d97706" },
+      { name: "Hipertensi Tk.1", value: hiperMap["Hipertensi Tk. 1"], color: "#ea580c" },
+      { name: "Hipertensi Tk.2", value: hiperMap["Hipertensi Tk. 2"], color: "#dc2626" },
     ].filter(d => d.value > 0));
 
-    /* ── Chart gula darah — distribusi semua pemeriksaan terakhir ── */
+    /* ── Chart gula darah ── */
     const gulaMap = { Normal: 0, "Pra-Diabetes": 0, Diabetes: 0 };
     ll.forEach(l => {
       const pemL = pl.filter(p => p.lansiaId === l.id).sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
@@ -347,34 +470,31 @@ export default function Home() {
       { name: "Diabetes",     value: gulaMap["Diabetes"],     color: "#dc2626" },
     ].filter(d => d.value > 0));
 
-    /* ── Chart kunjungan posyandu 6 bulan terakhir ── */
+    /* ── Chart kunjungan posyandu ── */
     const kunjungan = bulan6.map(({ tahun, bulan, label }) => {
       const balitaKunjungan = new Set(
-        pb.filter(p => {
-          const d = new Date(p.tanggal);
-          return d.getFullYear() === tahun && d.getMonth() === bulan;
-        }).map(p => p.balitaId)
+        pb.filter(p => { const d = new Date(p.tanggal); return d.getFullYear() === tahun && d.getMonth() === bulan; }).map(p => p.balitaId)
       ).size;
       const lansiaKunjungan = new Set(
-        pl.filter(p => {
-          const d = new Date(p.tanggal);
-          return d.getFullYear() === tahun && d.getMonth() === bulan;
-        }).map(p => p.lansiaId)
+        pl.filter(p => { const d = new Date(p.tanggal); return d.getFullYear() === tahun && d.getMonth() === bulan; }).map(p => p.lansiaId)
       ).size;
       return { bulan: label, balita: balitaKunjungan, lansia: lansiaKunjungan };
     });
     setKunjunganData(kunjungan);
   }
 
-  /* ── Radial data dari stats ── */
-  const pctBalitaSehat  = stats.balita > 0 ? Math.round(((stats.balita - stats.stunting - stats.severelyStunting) / stats.balita) * 100) : 0;
-  const pctGiziBaik     = stats.balita > 0 ? Math.round(((stats.balita - stats.severelyStunting) / stats.balita) * 100) : 0;
-  const pctLansiaSehat  = stats.lansia > 0 ? Math.round(((stats.lansia - stats.hipertensi) / stats.lansia) * 100) : 0;
+  /* ── Radial data ── */
+  const pctBalitaSehat = stats.balita > 0 ? Math.round(((stats.balita - stats.stunting - stats.severelyStunting) / stats.balita) * 100) : 0;
+  const pctGiziBaik    = stats.balita > 0 ? Math.round(((stats.balita - stats.severelyStunting) / stats.balita) * 100) : 0;
+  const pctLansiaSehat = stats.lansia > 0 ? Math.round(((stats.lansia - stats.hipertensi) / stats.lansia) * 100) : 0;
   const radialData = [
     { name: "Balita Normal", value: pctBalitaSehat, fill: "#d97706" },
     { name: "Gizi Baik",     value: pctGiziBaik,   fill: "#dc2626" },
     { name: "Lansia Sehat",  value: pctLansiaSehat, fill: "#2d7a4f" },
   ];
+
+  /* ── Jadwal terdekat (maks 4 kartu di hero section) ── */
+  const jadwalPreview = jadwalList.slice(0, 4);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f5f7f4", fontFamily: "'Plus Jakarta Sans', sans-serif", color: "#1f2d1f", overflowX: "hidden" }}>
@@ -386,7 +506,10 @@ export default function Home() {
         ::-webkit-scrollbar-track { background: #f0f4f1; }
         ::-webkit-scrollbar-thumb { background: #b5ceba; border-radius: 3px; }
         @keyframes slide-up { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slide-up-delay { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        @keyframes fade-in { from{opacity:0} to{opacity:1} }
         .hero-title { font-size: clamp(32px, 4.5vw, 56px); font-weight: 800; line-height: 1.1; letter-spacing: -1.5px; color: #1f2d1f; animation: slide-up 0.7s ease both; }
         .section-title { font-size: clamp(22px, 2.8vw, 32px); font-weight: 800; letter-spacing: -0.8px; color: #1f2d1f; }
         .card-hover { transition: transform 0.22s, box-shadow 0.22s; }
@@ -397,6 +520,7 @@ export default function Home() {
         .health-info-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.1) !important; }
         .tip-card { transition: transform 0.22s, box-shadow 0.22s; }
         .tip-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(45,122,79,0.1) !important; }
+        .jadwal-section { animation: fade-in 0.6s 0.3s ease both; opacity: 0; animation-fill-mode: forwards; }
       `}</style>
 
       {/* ══ NAVBAR ══ */}
@@ -450,6 +574,88 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ══ JADWAL POSYANDU TERDEKAT ══ */}
+      <section className="jadwal-section" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px 56px" }}>
+        <div style={{
+          background: "linear-gradient(135deg, #f0faf4 0%, #e6f4ec 100%)",
+          border: "1px solid #c8e6d4",
+          borderRadius: 24,
+          padding: "32px 28px",
+          position: "relative",
+          overflow: "hidden",
+        }}>
+          {/* Decorative background circle */}
+          <div style={{
+            position: "absolute", top: -60, right: -60,
+            width: 220, height: 220,
+            borderRadius: "50%",
+            background: "rgba(45,122,79,0.06)",
+            pointerEvents: "none",
+          }} />
+          <div style={{
+            position: "absolute", bottom: -40, left: -40,
+            width: 160, height: 160,
+            borderRadius: "50%",
+            background: "rgba(45,122,79,0.04)",
+            pointerEvents: "none",
+          }} />
+
+          {/* Header row */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24, position: "relative" }}>
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "#2d7a4f", borderRadius: 50, padding: "5px 14px", marginBottom: 10 }}>
+                <Calendar size={12} color="white" />
+                <span style={{ color: "white", fontSize: 12, fontWeight: 600 }}>Jadwal Terdekat</span>
+              </div>
+              <h2 style={{ fontSize: "clamp(20px, 2.4vw, 28px)", fontWeight: 800, color: "#1f2d1f", letterSpacing: -0.8, marginBottom: 4 }}>
+                Jadwal Posyandu
+              </h2>
+              <p style={{ color: "#5a7060", fontSize: 14 }}>
+                Kegiatan posyandu yang akan datang di wilayah Anda
+              </p>
+            </div>
+          </div>
+
+          {/* Content */}
+          {loading ? (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "36px 0", color: "#9aab9a", gap: 10 }}>
+              <div style={{ width: 20, height: 20, border: "2.5px solid #c8e6d4", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+              <span style={{ fontSize: 14 }}>Memuat jadwal…</span>
+            </div>
+          ) : jadwalPreview.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "36px 0", color: "#9aab9a" }}>
+              <div style={{ width: 52, height: 52, background: "#e8f5ed", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+                <Calendar size={24} color="#b5ceba" />
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 500 }}>Belum ada jadwal posyandu dalam waktu dekat</p>
+              <p style={{ fontSize: 13, marginTop: 4, color: "#b5ceba" }}>Jadwal akan muncul otomatis saat ditambahkan</p>
+            </div>
+          ) : (
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+              gap: 14,
+            }}>
+              {jadwalPreview.map((jadwal) => (
+                <JadwalCard key={jadwal.id} jadwal={jadwal} />
+              ))}
+            </div>
+          )}
+
+          {/* Footer hint jika ada lebih dari 4 jadwal */}
+          {jadwalList.length > 4 && (
+            <div style={{ textAlign: "center", marginTop: 18 }}>
+              <span style={{ color: "#5a7060", fontSize: 13 }}>
+                +{jadwalList.length - 4} jadwal lainnya ·{" "}
+                <Link href="/jadwal" style={{ color: "#2d7a4f", fontWeight: 600, textDecoration: "none" }}>
+                  Lihat semua
+                </Link>
+              </span>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* ══ STAT CARDS ══ */}
       <section style={{ maxWidth: 1280, margin: "0 auto", padding: "0 32px 48px" }}>
         {loading
@@ -457,15 +663,14 @@ export default function Home() {
             <div style={{ display: "flex", justifyContent: "center", padding: "40px", color: "#9aab9a", gap: 10 }}>
               <div style={{ width: 20, height: 20, border: "2.5px solid #e4ede6", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
               Memuat data…
-              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 14 }}>
-              <StatCard icon={Baby}        title="Total Balita"        value={stats.balita}           sub="Terdaftar aktif"          accent="#2d7a4f" lightBg="#e8f5ed" />
-              <StatCard icon={Users}       title="Total Lansia"        value={stats.lansia}           sub="Dalam pemantauan"         accent="#3a9e6e" lightBg="#eaf6f0" />
-              <StatCard icon={TrendingUp}  title="Kasus Stunting"      value={stats.stunting}         sub="Berdasarkan pemeriksaan"  accent="#d97706" lightBg="#fef3c7" />
-              <StatCard icon={TrendingDown}title="Severely Stunting"   value={stats.severelyStunting} sub="Perlu penanganan segera"  accent="#dc2626" lightBg="#fee2e2" />
-              <StatCard icon={HeartPulse}  title="Risiko Hipertensi"   value={stats.hipertensi}       sub="Pra & hipertensi aktif"   accent="#be185d" lightBg="#fce7f3" />
+              <StatCard icon={Baby}        title="Total Balita"        value={stats.balita}            sub="Terdaftar aktif"         accent="#2d7a4f" lightBg="#e8f5ed" />
+              <StatCard icon={Users}       title="Total Lansia"        value={stats.lansia}            sub="Dalam pemantauan"        accent="#3a9e6e" lightBg="#eaf6f0" />
+              <StatCard icon={TrendingUp}  title="Kasus Stunting"      value={stats.stunting}          sub="Berdasarkan pemeriksaan" accent="#d97706" lightBg="#fef3c7" />
+              <StatCard icon={TrendingDown}title="Severely Stunting"   value={stats.severelyStunting}  sub="Perlu penanganan segera" accent="#dc2626" lightBg="#fee2e2" />
+              <StatCard icon={HeartPulse}  title="Risiko Hipertensi"   value={stats.hipertensi}        sub="Pra & hipertensi aktif"  accent="#be185d" lightBg="#fce7f3" />
             </div>
           )
         }
@@ -509,17 +714,12 @@ export default function Home() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16, marginBottom: 16 }}>
-
-          {/* Tren Stunting — 3 kategori */}
+          {/* Tren Stunting */}
           <div style={{ background: "#fff", border: "1px solid #e4ede6", borderRadius: 20, padding: "26px 22px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <h3 style={{ fontSize: 17, fontWeight: 700, color: "#1f2d1f", marginBottom: 4 }}>Tren Stunting Balita</h3>
             <p style={{ color: "#6b7c6b", fontSize: 13, marginBottom: 16 }}>6 bulan terakhir — Normal, Stunting, Severely Stunting</p>
             <div style={{ display: "flex", gap: 18, marginBottom: 14 }}>
-              {[
-                { c: "#2d7a4f", l: "Normal"   },
-                { c: "#d97706", l: "Stunting"  },
-                { c: "#dc2626", l: "Severely"  },
-              ].map(({ c, l }) => (
+              {[{ c: "#2d7a4f", l: "Normal" }, { c: "#d97706", l: "Stunting" }, { c: "#dc2626", l: "Severely" }].map(({ c, l }) => (
                 <div key={l} style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 10, height: 10, borderRadius: 3, background: c }} />
                   <span style={{ color: "#6b7c6b", fontSize: 13 }}>{l}</span>
@@ -554,7 +754,6 @@ export default function Home() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 16 }}>
-
           {/* Hipertensi Pie */}
           <div style={{ background: "#fff", border: "1px solid #e4ede6", borderRadius: 20, padding: "26px 22px", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: "#1f2d1f", marginBottom: 4 }}>Risiko Hipertensi</h3>
@@ -636,11 +835,11 @@ export default function Home() {
                 <defs>
                   <linearGradient id="gBalita" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#2d7a4f" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#2d7a4f" stopOpacity={0}    />
+                    <stop offset="95%" stopColor="#2d7a4f" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="gLansia" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor="#d97706" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#d97706" stopOpacity={0}    />
+                    <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eef2ee" />
@@ -733,8 +932,8 @@ export default function Home() {
               <h4 style={{ color: "#e8f5ed", fontSize: 14, marginBottom: 10 }}>Kontak</h4>
               {[
                 { icon: MapPin, text: "Jl. Desa Ceria No.1, Jawa Tengah" },
-                { icon: Phone,  text: "+62 812-3456-7890"                },
-                { icon: Mail,   text: "info@smarthealthvillage.id"        },
+                { icon: Phone,  text: "+62 812-3456-7890" },
+                { icon: Mail,   text: "info@smarthealthvillage.id" },
               ].map(({ icon: Icon, text }) => (
                 <div key={text} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                   <Icon size={14} color="#7dd3a8" />

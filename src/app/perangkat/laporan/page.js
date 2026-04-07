@@ -110,20 +110,10 @@ export default function LaporanPage() {
 
   const printDataRef = useRef();
   const printPosRef  = useRef();
-
-  const router = useRouter();
-  const [authChecked, setAuthChecked] = useState(false);
   
 
   /* ── Load data section 1 saat kategori berubah ── */
   useEffect(() => {
-
-    const token = localStorage.getItem("token"); // sesuaikan key-nya
-      if (!token) {
-        router.replace("/login"); // langsung redirect ke login
-      } else {
-          setAuthChecked(true); // baru tampilkan halaman
-      }
 
     if (!kategoriData) return;
     setLoadingData(true);
@@ -145,17 +135,9 @@ export default function LaporanPage() {
     load();
   }, [kategoriData]);
 
-  if (!authChecked) return null;
 
   /* ── Load data section 2 saat kategori berubah ── */
   useEffect(() => {
-
-    const token = localStorage.getItem("token"); // sesuaikan key-nya
-      if (!token) {
-        router.replace("/login"); // langsung redirect ke login
-      } else {
-          setAuthChecked(true); // baru tampilkan halaman
-      }
 
     if (!kategoriPos) return;
     setLoadingPos(true);
@@ -179,8 +161,6 @@ export default function LaporanPage() {
     }
     load();
   }, [kategoriPos]);
-
-  if (!authChecked) return null;
 
   /* ── Filter by bulan ── */
   async function handleFilterPos() {

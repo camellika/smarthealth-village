@@ -114,7 +114,7 @@ function hitungUsiaBulan(tglLahir, tglPemeriksaan) {
 
 /* ── helpers ── */
 const INIT_FORM = { nik: "", nama: "", namaIbu: "", alamat: "", noTelp: "", tglLahir: "", jenisKelamin: "" };
-const PEMERIKSAAN_INIT = { balitaId: "", kegiatan: "", bb: "", tb: "", lingkarKepala: "", lingkarLengan: "", catatan: "" };
+const PEMERIKSAAN_INIT = { balitaId: "", kegiatan: "", bb: "", tb: "", lingkarKepala: "", lingkarLengan: ""};
 
 const formatDate = (d) => {
   if (!d) return "-";
@@ -258,7 +258,6 @@ function DetailModal({ data, onClose }) {
                 { label: "Berat Badan",    value: data.bb   ? `${data.bb} kg`  : "-", accent: true },
                 { label: "Tinggi Badan",   value: data.tb   ? `${data.tb} cm`  : "-", accent: true },
                 { label: "Lingkar Kepala", value: data.lingkarKepala ? `${data.lingkarKepala} cm` : "-" },
-                { label: "Lingkar Lengan", value: data.lingkarLengan ? `${data.lingkarLengan} cm` : "-" },
               ].map(({ label, value, accent }) => (
                 <div key={label} style={{ background: accent ? "#e8f5ed" : "#f8fbf9", border: `1px solid ${accent ? "#b8ddc5" : "#f0f6f2"}`, borderRadius: 10, padding: "10px 12px" }}>
                   <p style={{ fontSize: 11, color: accent ? "#2d7a4f" : "#9aab9a", fontWeight: 600 }}>{label}</p>
@@ -282,13 +281,7 @@ function DetailModal({ data, onClose }) {
             </div>
           )}
 
-          {/* Catatan */}
-          {data.catatan && (
-            <div style={{ background: "#fef9ec", border: "1px solid #fde68a", borderRadius: 10, padding: "10px 14px" }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: "#d97706", marginBottom: 4 }}>📝 Catatan Petugas</p>
-              <p style={{ fontSize: 13, color: "#78350f", lineHeight: 1.6 }}>{data.catatan}</p>
-            </div>
-          )}
+          
 
         </div>
 
@@ -581,16 +574,9 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
               <input type="number" step="0.1" min="0" name="lingkarKepala" value={pemForm.lingkarKepala ?? ""} onChange={handleChange} placeholder="cth: 44" className="input-bare" />
             </div>
 
-            <div>
-              <label className="label">Lingkar Lengan (cm) <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
-              <input type="number" step="0.1" min="0" name="lingkarLengan" value={pemForm.lingkarLengan ?? ""} onChange={handleChange} placeholder="cth: 44" className="input-bare" />
-            </div>
 
 
-            <div style={{ gridColumn: "1/-1" }}>
-              <label className="label">Catatan <span style={{ color: "#9aab9a", fontWeight: 400 }}>opsional</span></label>
-              <textarea name="catatan" value={pemForm.catatan ?? ""} onChange={handleChange} placeholder="Catatan kondisi balita…" className="textarea-bare" />
-            </div>
+            
           </div>
 
           {/* Preview Status Stunting */}
@@ -971,7 +957,7 @@ const severelyStuntingCount = balitaList.filter(b => {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
-                    {["No","Kegiatan","Nama Balita","Tgl Pemeriksaan","BB (kg)","TB (cm)","Lk. Kepala","Catatan","Status","Detail"].map(h => (
+                    {["No","Kegiatan","Nama Balita","Tgl Pemeriksaan","BB (kg)","TB (cm)","Lk. Kepala","Status","Detail"].map(h => (
                       <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 12, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
@@ -1004,9 +990,7 @@ const severelyStuntingCount = balitaList.filter(b => {
                         <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", color: "#6b7c6b", maxWidth: 120 }}>
-                          <span style={{ display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{p.catatan || "-"}</span>
-                        </td>
+                        
                         {/* ── Kolom Status Stunting WHO ── */}
                         <td style={{ padding: "12px 14px" }}>
                           {stunting
