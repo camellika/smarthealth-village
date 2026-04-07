@@ -9,8 +9,125 @@ import { getPosyanduLansia, getPosyanduLansiaByBulan } from "@/services/posyandu
 import {
   FileText, Baby, Users, Filter, Printer,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
-  Download, Calendar, RotateCcw
+  Download, Calendar, RotateCcw, CheckCircle, AlertTriangle
 } from "lucide-react";
+
+
+/* ══════════════════════════════════════════
+   TABEL WHO TB/U (0–60 bulan)
+══════════════════════════════════════════ */
+const WHO_TB_LAKI = [
+  [0,49.9,46.1,44.2],[1,54.7,50.8,48.9],[2,58.4,54.4,52.4],[3,61.4,57.3,55.3],
+  [4,63.9,59.7,57.6],[5,65.9,61.7,59.6],[6,67.6,63.3,61.2],[7,69.2,64.8,62.7],
+  [8,70.6,66.2,64.0],[9,72.0,67.5,65.2],[10,73.3,68.7,66.4],[11,74.5,69.9,67.6],
+  [12,75.7,71.0,68.6],[13,76.9,72.1,69.6],[14,78.0,73.1,70.6],[15,79.1,74.1,71.6],
+  [16,80.2,75.0,72.5],[17,81.2,75.9,73.4],[18,82.3,76.9,74.2],[19,83.2,77.7,75.0],
+  [20,84.2,78.6,75.9],[21,85.1,79.4,76.7],[22,86.0,80.2,77.4],[23,86.9,81.0,78.2],
+  [24,87.8,81.7,78.8],[25,88.7,82.6,79.6],[26,89.6,83.4,80.4],[27,90.4,84.2,81.1],
+  [28,91.2,84.9,81.8],[29,92.0,85.7,82.6],[30,92.9,86.5,83.3],[31,93.7,87.2,84.0],
+  [32,94.4,87.9,84.7],[33,95.2,88.6,85.4],[34,96.0,89.3,86.0],[35,96.7,90.0,86.7],
+  [36,97.4,90.7,87.3],[37,98.2,91.4,88.0],[38,98.9,92.0,88.6],[39,99.6,92.7,89.2],
+  [40,100.3,93.3,89.8],[41,101.0,93.9,90.4],[42,101.7,94.5,91.0],[43,102.4,95.1,91.6],
+  [44,103.1,95.7,92.2],[45,103.8,96.3,92.8],[46,104.4,96.9,93.3],[47,105.1,97.5,93.9],
+  [48,105.7,98.1,94.4],[49,106.4,98.7,95.0],[50,107.0,99.3,95.5],[51,107.6,99.8,96.0],
+  [52,108.2,100.4,96.6],[53,108.9,101.0,97.1],[54,109.5,101.5,97.6],[55,110.1,102.1,98.1],
+  [56,110.7,102.6,98.6],[57,111.3,103.1,99.2],[58,111.9,103.7,99.7],[59,112.5,104.2,100.2],
+  [60,113.0,104.7,100.7],
+];
+const WHO_TB_PEREMPUAN = [
+  [0,49.1,45.4,43.6],[1,53.7,49.8,47.8],[2,57.1,53.0,51.0],[3,59.8,55.6,53.5],
+  [4,62.1,57.8,55.6],[5,64.0,59.6,57.4],[6,65.7,61.2,59.0],[7,67.3,62.7,60.5],
+  [8,68.7,64.0,61.7],[9,70.1,65.3,63.0],[10,71.5,66.5,64.2],[11,72.8,67.7,65.4],
+  [12,74.0,68.9,66.5],[13,75.2,70.0,67.6],[14,76.4,71.1,68.7],[15,77.5,72.1,69.7],
+  [16,78.6,73.1,70.7],[17,79.7,74.1,71.7],[18,80.7,75.1,72.6],[19,81.7,76.0,73.5],
+  [20,82.7,76.9,74.4],[21,83.7,77.8,75.2],[22,84.6,78.7,76.1],[23,85.5,79.6,77.0],
+  [24,86.4,80.3,77.7],[25,87.4,81.3,78.6],[26,88.3,82.1,79.4],[27,89.1,82.9,80.2],
+  [28,90.0,83.8,81.0],[29,90.8,84.5,81.8],[30,91.6,85.3,82.5],[31,92.4,86.1,83.3],
+  [32,93.2,86.8,84.0],[33,94.0,87.5,84.7],[34,94.7,88.2,85.4],[35,95.4,88.9,86.0],
+  [36,96.1,89.6,86.7],[37,96.9,90.3,87.3],[38,97.6,91.0,87.9],[39,98.3,91.7,88.5],
+  [40,99.0,92.3,89.2],[41,99.7,92.9,89.8],[42,100.3,93.5,90.3],[43,101.0,94.2,90.9],
+  [44,101.6,94.8,91.5],[45,102.3,95.4,92.1],[46,102.9,96.0,92.6],[47,103.5,96.6,93.2],
+  [48,104.1,97.2,93.8],[49,104.8,97.7,94.3],[50,105.4,98.3,94.8],[51,106.0,98.8,95.4],
+  [52,106.5,99.4,95.9],[53,107.1,100.0,96.4],[54,107.7,100.5,97.0],[55,108.3,101.0,97.5],
+  [56,108.8,101.6,98.0],[57,109.4,102.1,98.5],[58,110.0,102.6,99.0],[59,110.5,103.1,99.5],
+  [60,111.0,103.7,100.0],
+];
+
+
+/* ══════════════════════════════════════════
+   FUNGSI STATUS — BALITA
+══════════════════════════════════════════ */
+function hitungStatusStunting(tb, usiaBulan, jenisKelamin) {
+  if (!tb || usiaBulan === null || usiaBulan === undefined || usiaBulan < 0 || usiaBulan > 60) return null;
+  const tabel = jenisKelamin === "Perempuan" ? WHO_TB_PEREMPUAN : WHO_TB_LAKI;
+  const bulan = Math.min(Math.round(usiaBulan), 60);
+  const row   = tabel.find(r => r[0] === bulan);
+  if (!row) return null;
+  const [, median, sd2] = row;
+  const sd     = median - sd2;
+  const zScore = sd > 0 ? (tb - median) / sd : 0;
+  if (zScore < -3) return { zScore: zScore.toFixed(2), label: "Severely Stunting", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (zScore < -2) return { zScore: zScore.toFixed(2), label: "Stunting",           color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  return               { zScore: zScore.toFixed(2), label: "Normal",            color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
+}
+
+function getStatusBB(bb, tglLahir) {
+  if (!bb || !tglLahir) return null;
+  const bulan  = Math.floor((Date.now() - new Date(tglLahir).getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+  const median = bulan <= 12 ? 9 : bulan <= 24 ? 12 : bulan <= 36 ? 14 : bulan <= 48 ? 16 : 18;
+  if (bb < median * 0.8) return { label: "Gizi Buruk", color: "#dc2626", bg: "#fee2e2", border: "#fecaca" };
+  if (bb < median * 0.9) return { label: "BB Kurang",  color: "#d97706", bg: "#fef3c7", border: "#fde68a" };
+  return                        { label: "Normal",      color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" };
+}
+
+const hitungUsiaBulanPadaTanggal = (tglLahir, tglPeriksa) => {
+  if (!tglLahir || !tglPeriksa) return null;
+  return Math.floor((new Date(tglPeriksa) - new Date(tglLahir)) / (1000 * 60 * 60 * 24 * 30.44));
+};
+
+
+/* ══════════════════════════════════════════
+   FUNGSI STATUS — LANSIA
+══════════════════════════════════════════ */
+function getStatusTensi(tensi) {
+  if (!tensi) return null;
+  if (tensi >= 160) return { label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 140) return { label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 120) return { label: "Pra-Hipertensi",   color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  if (tensi < 90)   return { label: "Tensi Rendah",     color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  return               { label: "Normal",           color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
+}
+
+function getStatusGula(gula) {
+  if (!gula) return null;
+  if (gula >= 200) return { label: "Diabetes",     color: "#dc2626", bg: "#fee2e2", border: "#fecaca" };
+  if (gula >= 100) return { label: "Pra-Diabetes", color: "#d97706", bg: "#fef3c7", border: "#fde68a" };
+  return              { label: "Normal",        color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" };
+}
+
+
+/* ── komponen badge status ── */
+function StatusBadge({ cfg, zScore }) {
+  if (!cfg) return <span style={{ color: "#d1dbd2", fontSize: 12 }}>—</span>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <span style={{
+        display: "inline-flex", alignItems: "center", gap: 4,
+        background: cfg.bg, color: cfg.color,
+        border: `1px solid ${cfg.border}`,
+        padding: "3px 9px", borderRadius: 7,
+        fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+      }}>
+        {cfg.icon && <span style={{ fontSize: 9 }}>{cfg.icon}</span>}
+        {cfg.label}
+      </span>
+      {zScore !== undefined && (
+        <span style={{ fontSize: 10, color: "#9aab9a", paddingLeft: 2 }}>Z: {zScore}</span>
+      )}
+    </div>
+  );
+}
+
 
 /* ── helpers ── */
 const BULAN = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -27,6 +144,7 @@ const hitungUsia = (tgl) => {
   return `${Math.floor(bulan / 12)} th ${bulan % 12} bln`;
 };
 const tglCetak = () => new Date().toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
+
 
 /* ── EMPTY STATE ── */
 function PilihKategori() {
@@ -77,6 +195,7 @@ function Pagination({ page, totalPage, onPrev, onNext, perPage, onPerPage, total
   );
 }
 
+
 /* ══════════════════════════════════════════
    HALAMAN UTAMA
 ══════════════════════════════════════════ */
@@ -110,89 +229,52 @@ export default function LaporanPage() {
 
   const printDataRef = useRef();
   const printPosRef  = useRef();
-  
 
-  /* ── Load data section 1 saat kategori berubah ── */
+  /* ── Load section 1 ── */
   useEffect(() => {
-
     if (!kategoriData) return;
-    setLoadingData(true);
-    setPageData(1);
-    setSortFieldData("id");
-    setSortAscData(true);
+    setLoadingData(true); setPageData(1); setSortFieldData("id"); setSortAscData(true);
     async function load() {
       try {
-        if (kategoriData === "balita") {
-          const d = await getBalita();
-          setBalitaList(d);
-        } else {
-          const d = await getLansia();
-          setLansiaList(d);
-        }
+        if (kategoriData === "balita") { const d = await getBalita();  setBalitaList(d); }
+        else                           { const d = await getLansia(); setLansiaList(d); }
       } catch {}
       finally { setLoadingData(false); }
     }
     load();
   }, [kategoriData]);
 
-
-  /* ── Load data section 2 saat kategori berubah ── */
+  /* ── Load section 2 ── */
   useEffect(() => {
-
     if (!kategoriPos) return;
-    setLoadingPos(true);
-    setPosData([]);
-    setTahunPilih("");
-    setBulanPilih("");
-    setPagePos(1);
-    setSortFieldPos("id");
-    setSortAscPos(true);
+    setLoadingPos(true); setPosData([]); setTahunPilih(""); setBulanPilih(""); setPagePos(1); setSortFieldPos("id"); setSortAscPos(true);
     async function load() {
       try {
-        if (kategoriPos === "balita") {
-          const d = await getPosyanduBalita();
-          setPosData(d);
-        } else {
-          const d = await getPosyanduLansia();
-          setPosData(d);
-        }
+        if (kategoriPos === "balita") { const d = await getPosyanduBalita(); setPosData(d); }
+        else                          { const d = await getPosyanduLansia(); setPosData(d); }
       } catch {}
       finally { setLoadingPos(false); }
     }
     load();
   }, [kategoriPos]);
 
-  /* ── Filter by bulan ── */
+  /* ── Filter bulan posyandu ── */
   async function handleFilterPos() {
     if (!kategoriPos || !tahunPilih || !bulanPilih) return;
-    setLoadingPos(true);
-    setPagePos(1);
+    setLoadingPos(true); setPagePos(1);
     try {
-      if (kategoriPos === "balita") {
-        const d = await getPosyanduBalitaByBulan(Number(tahunPilih), Number(bulanPilih));
-        setPosData(d);
-      } else {
-        const d = await getPosyanduLansiaByBulan(Number(tahunPilih), Number(bulanPilih));
-        setPosData(d);
-      }
+      if (kategoriPos === "balita") { const d = await getPosyanduBalitaByBulan(Number(tahunPilih), Number(bulanPilih)); setPosData(d); }
+      else                          { const d = await getPosyanduLansiaByBulan(Number(tahunPilih), Number(bulanPilih)); setPosData(d); }
     } catch {}
     finally { setLoadingPos(false); }
   }
 
-  /* ── Reset filter posyandu ── */
+  /* ── Reset filter ── */
   async function handleResetFilter() {
-    setTahunPilih("");
-    setBulanPilih("");
-    setLoadingPos(true);
-    setPagePos(1);
+    setTahunPilih(""); setBulanPilih(""); setLoadingPos(true); setPagePos(1);
     try {
-      if (kategoriPos === "balita") {
-        const d = await getPosyanduBalita();
-        setPosData(d);
-      } else {
-        const d = await getPosyanduLansia();
-        setPosData(d);
-      }
+      if (kategoriPos === "balita") { const d = await getPosyanduBalita(); setPosData(d); }
+      else                          { const d = await getPosyanduLansia(); setPosData(d); }
     } catch {}
     finally { setLoadingPos(false); }
   }
@@ -207,7 +289,7 @@ export default function LaporanPage() {
     else { setSortFieldPos(field); setSortAscPos(true); }
   }
 
-  /* ── Computed section data ── */
+  /* ── Computed section 1 ── */
   const rawData    = kategoriData === "balita" ? balitaList : lansiaList;
   const sortedData = [...rawData].sort((a, b) => {
     const va = a[sortFieldData] ?? "", vb = b[sortFieldData] ?? "";
@@ -217,7 +299,7 @@ export default function LaporanPage() {
   const totalPageData = Math.ceil(sortedData.length / perPageData) || 1;
   const pagedData     = sortedData.slice((pageData - 1) * perPageData, pageData * perPageData);
 
-  /* ── Computed section posyandu ── */
+  /* ── Computed section 2 ── */
   const sortedPos = [...posData].sort((a, b) => {
     const va = a[sortFieldPos] ?? "", vb = b[sortFieldPos] ?? "";
     if (typeof va === "string") return sortAscPos ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -226,263 +308,126 @@ export default function LaporanPage() {
   const totalPagePos = Math.ceil(sortedPos.length / perPagePos) || 1;
   const pagedPos     = sortedPos.slice((pagePos - 1) * perPagePos, pagePos * perPagePos);
 
-  /* ── Judul laporan ── */
-  const judulData = kategoriData
-    ? `Laporan Data ${kategoriData === "balita" ? "Balita" : "Lansia"}`
-    : "Laporan Data";
-  const judulPos = kategoriPos
+  /* ── Judul ── */
+  const judulData = kategoriData ? `Laporan Data ${kategoriData === "balita" ? "Balita" : "Lansia"}` : "Laporan Data";
+  const judulPos  = kategoriPos
     ? `Laporan Data Posyandu ${kategoriPos === "balita" ? "Balita" : "Lansia"}${tahunPilih && bulanPilih ? ` — ${BULAN[Number(bulanPilih) - 1]} ${tahunPilih}` : ""}`
     : "Laporan Data Posyandu";
 
   /* ── Print helper ── */
   function doPrint(ref, judul, pagedItems, kategori) {
-  const win = window.open("", "_blank");
+    const win = window.open("", "_blank");
+    const logoUrl = new URL("/src/assets/logoDesa.jpg", window.location.origin).href;
 
-  // Konversi logo ke base64 agar bisa muncul di tab baru
-  const logoUrl = new URL("/src/assets/logoDesa.jpg", window.location.origin).href;
+    const getHeaders = () => {
+      if (kategori === "balita-data")     return ["No","NIK","Nama Balita","Nama Ibu","Tgl Lahir","Usia","No Telp","Alamat"];
+      if (kategori === "lansia-data")     return ["No","NIK","Nama Lansia","Tgl Lahir","Usia","No Telp","Alamat"];
+      if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala","Lk. Lengan","Status Gizi","Status Stunting"];
+      if (kategori === "lansia-posyandu") return ["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut","Tensi (mmHg)","Status Tensi","Gula Darah (mg/dL)","Status Gula"];
+      return [];
+    };
 
-  // Render kolom header sesuai kategori
-  const getHeaders = () => {
-    if (kategori === "balita-data")    return ["No","NIK","Nama Balita","Nama Ibu","Tgl Lahir","Usia","No Telp","Alamat"];
-    if (kategori === "lansia-data")    return ["No","NIK","Nama Lansia","Tgl Lahir","Usia","No Telp","Alamat"];
-    if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala (cm)","Lk. Lengan (cm)"];
-    if (kategori === "lansia-posyandu") return ["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut (cm)","Tensi (mmHg)","Gula Darah (mg/dL)"];
-    return [];
-  };
+    const getRows = () => pagedItems.map((item, i) => {
+      let cells = [];
+      if (kategori === "balita-data") {
+        cells = [i+1, item.nik??"-", item.nama??"-", item.namaIbu??"-", formatDate(item.tglLahir), hitungUsia(item.tglLahir), item.noTelp??"-", item.alamat??"-"];
+      } else if (kategori === "lansia-data") {
+        cells = [i+1, item.nik??"-", item.nama??"-", formatDate(item.tglLahir), hitungUsia(item.tglLahir), item.noTelp??"-", item.alamat??"-"];
+      } else if (kategori === "balita-posyandu") {
+        const usiaBulan = hitungUsiaBulanPadaTanggal(item.balita?.tglLahir, item.tanggal);
+        const gizi      = getStatusBB(item.bb, item.balita?.tglLahir);
+        const stunting  = hitungStatusStunting(item.tb, usiaBulan, item.balita?.jenisKelamin);
+        cells = [i+1, item.balita?.nama??"-", item.kegiatan??"-", formatDate(item.tanggal), item.bb??"-", item.tb??"-", item.lingkarKepala??"-", item.lingkarLengan??"-",
+          gizi?.label ?? "-",
+          stunting ? `${stunting.label} (Z:${stunting.zScore})` : "-",
+        ];
+      } else if (kategori === "lansia-posyandu") {
+        const tensiCfg = getStatusTensi(item.tensi);
+        const gulaCfg  = getStatusGula(item.gulaDarah);
+        cells = [i+1, item.lansia?.nama??"-", item.kegiatan??"-", formatDate(item.tanggal), item.bb??"-", item.tb??"-", item.lingkarPerut??"-",
+          item.tensi??"-", tensiCfg?.label??"-",
+          item.gulaDarah??"-", gulaCfg?.label??"-",
+        ];
+      }
+      return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
+    }).join("");
 
-  const getRows = () => pagedItems.map((item, i) => {
-    let cells = [];
-    if (kategori === "balita-data") {
-      cells = [
-        i + 1,
-        item.nik ?? "-",
-        item.nama ?? "-",
-        item.namaIbu ?? "-",
-        formatDate(item.tglLahir),
-        hitungUsia(item.tglLahir),
-        item.noTelp ?? "-",
-        item.alamat ?? "-",
-      ];
-    } else if (kategori === "lansia-data") {
-      cells = [
-        i + 1,
-        item.nik ?? "-",
-        item.nama ?? "-",
-        formatDate(item.tglLahir),
-        hitungUsia(item.tglLahir),
-        item.noTelp ?? "-",
-        item.alamat ?? "-",
-      ];
-    } else if (kategori === "balita-posyandu") {
-      cells = [
-        i + 1,
-        item.balita?.nama ?? "-",
-        item.kegiatan ?? "-",
-        formatDate(item.tanggal),
-        item.bb ?? "-",
-        item.tb ?? "-",
-        item.lingkarKepala ?? "-",
-        
-      ];
-    } else if (kategori === "lansia-posyandu") {
-      cells = [
-        i + 1,
-        item.lansia?.nama ?? "-",
-        item.kegiatan ?? "-",
-        formatDate(item.tanggal),
-        item.bb ?? "-",
-        item.tb ?? "-",
-        item.lingkarPerut ?? "-",
-        item.tensi ?? "-",
-        item.gulaDarah ?? "-",
-      ];
-    }
-    return `<tr>${cells.map(c => `<td>${c}</td>`).join("")}</tr>`;
-  }).join("");
-
-  win.document.write(`
-    <html>
-    <head>
-      <title>${judul}</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
-        body { padding: 32px 40px; color: #1f2d1f; font-size: 12px; }
-
-        /* ── KOP SURAT ── */
-        .kop {
-          display: flex;
-          align-items: center;
-          gap: 20px;
-          padding-bottom: 14px;
-          border-bottom: 3px solid #2d7a4f;
-          margin-bottom: 6px;
-        }
-        .kop img {
-          width: 64px;
-          height: 64px;
-          object-fit: contain;
-        }
-        .kop-center { flex: 1; text-align: center; }
-        .kop-instansi {
-          font-size: 11px;
-          font-weight: 600;
-          color: #6b7c6b;
-          letter-spacing: 0.5px;
-          text-transform: uppercase;
-          margin-bottom: 2px;
-        }
-        .kop-nama {
-          font-size: 18px;
-          font-weight: 800;
-          color: #1f2d1f;
-          line-height: 1.2;
-        }
-        .kop-alamat {
-          font-size: 10px;
-          color: #9aab9a;
-          margin-top: 4px;
-        }
-        .kop-right { width: 64px; }
-
-        /* ── JUDUL LAPORAN ── */
-        .judul-wrap {
-          text-align: center;
-          margin: 18px 0 20px;
-        }
-        .judul-laporan {
-          font-size: 14px;
-          font-weight: 800;
-          color: #1f2d1f;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .judul-sub {
-          font-size: 11px;
-          color: #6b7c6b;
-          margin-top: 4px;
-        }
-        .judul-line {
-          width: 60px;
-          height: 3px;
-          background: #2d7a4f;
-          margin: 8px auto 0;
-          border-radius: 10px;
-        }
-
-        /* ── INFO ROW ── */
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          font-size: 11px;
-          color: #6b7c6b;
-          margin-bottom: 14px;
-          padding: 8px 12px;
-          background: #f8fbf9;
-          border-radius: 8px;
-          border: 1px solid #e4ede6;
-        }
-
-        /* ── TABEL ── */
-        table { width: 100%; border-collapse: collapse; }
-        thead tr { background: #2d7a4f; }
-        thead th {
-          padding: 9px 11px;
-          text-align: left;
-          font-size: 11px;
-          font-weight: 700;
-          color: #ffffff;
-          white-space: nowrap;
-          border: 1px solid #246240;
-        }
-        tbody td {
-          padding: 8px 11px;
-          border: 1px solid #e4ede6;
-          font-size: 11.5px;
-          color: #1f2d1f;
-          vertical-align: top;
-        }
-        tbody tr:nth-child(even) td { background: #f8fbf9; }
-        tbody tr:last-child td { border-bottom: 2px solid #2d7a4f; }
-
-        /* ── FOOTER ── */
-        .footer {
-          margin-top: 40px;
-          display: flex;
-          justify-content: flex-end;
-        }
-        .ttd-box { text-align: center; font-size: 11px; color: #1f2d1f; }
-        .ttd-box .ttd-kota { color: #6b7c6b; margin-bottom: 4px; }
-        .ttd-box .ttd-jabatan { font-weight: 700; margin-top: 60px; }
-        .ttd-box .ttd-garis {
-          margin: 4px auto 0;
-          width: 120px;
-          border-top: 1.5px solid #1f2d1f;
-        }
-        .ttd-box .ttd-nama { font-weight: 600; font-size: 12px; margin-top: 4px; }
-
-        /* ── PRINT ── */
-        @media print {
-          body { padding: 16px 24px; }
-          @page { margin: 1.5cm; }
-        }
-      </style>
-    </head>
-    <body>
-
-      <!-- KOP SURAT -->
-      <div class="kop">
-        <img src="${logoUrl}" alt="Logo Desa" onerror="this.style.display='none'" />
-        <div class="kop-center">
-          <p class="kop-instansi">Pemerintah Desa</p>
-          <p class="kop-nama">NAMA DESA ANDA</p>
-          <p class="kop-alamat">Jl. Nama Jalan No. XX, Kecamatan ..., Kabupaten ..., Provinsi ... · Kode Pos XXXXX</p>
+    win.document.write(`
+      <html><head>
+        <title>${judul}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+          * { box-sizing:border-box;margin:0;padding:0;font-family:'Plus Jakarta Sans',sans-serif; }
+          body { padding:32px 40px;color:#1f2d1f;font-size:12px; }
+          .kop { display:flex;align-items:center;gap:20px;padding-bottom:14px;border-bottom:3px solid #2d7a4f;margin-bottom:6px; }
+          .kop img { width:64px;height:64px;object-fit:contain; }
+          .kop-center { flex:1;text-align:center; }
+          .kop-instansi { font-size:11px;font-weight:600;color:#6b7c6b;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px; }
+          .kop-nama { font-size:18px;font-weight:800;color:#1f2d1f;line-height:1.2; }
+          .kop-alamat { font-size:10px;color:#9aab9a;margin-top:4px; }
+          .kop-right { width:64px; }
+          .judul-wrap { text-align:center;margin:18px 0 20px; }
+          .judul-laporan { font-size:14px;font-weight:800;color:#1f2d1f;text-transform:uppercase;letter-spacing:0.5px; }
+          .judul-sub { font-size:11px;color:#6b7c6b;margin-top:4px; }
+          .judul-line { width:60px;height:3px;background:#2d7a4f;margin:8px auto 0;border-radius:10px; }
+          .info-row { display:flex;justify-content:space-between;font-size:11px;color:#6b7c6b;margin-bottom:14px;padding:8px 12px;background:#f8fbf9;border-radius:8px;border:1px solid #e4ede6; }
+          table { width:100%;border-collapse:collapse; }
+          thead tr { background:#2d7a4f; }
+          thead th { padding:9px 11px;text-align:left;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;border:1px solid #246240; }
+          tbody td { padding:8px 11px;border:1px solid #e4ede6;font-size:11.5px;color:#1f2d1f;vertical-align:top; }
+          tbody tr:nth-child(even) td { background:#f8fbf9; }
+          tbody tr:last-child td { border-bottom:2px solid #2d7a4f; }
+          .footer { margin-top:40px;display:flex;justify-content:flex-end; }
+          .ttd-box { text-align:center;font-size:11px;color:#1f2d1f; }
+          .ttd-box .ttd-kota { color:#6b7c6b;margin-bottom:4px; }
+          .ttd-box .ttd-jabatan { font-weight:700;margin-top:60px; }
+          .ttd-box .ttd-garis { margin:4px auto 0;width:120px;border-top:1.5px solid #1f2d1f; }
+          .ttd-box .ttd-nama { font-weight:600;font-size:12px;margin-top:4px; }
+          @media print { body{padding:16px 24px;} @page{margin:1.5cm;} }
+        </style>
+      </head><body>
+        <div class="kop">
+          <img src="${logoUrl}" alt="Logo Desa" onerror="this.style.display='none'" />
+          <div class="kop-center">
+            <p class="kop-instansi">Pemerintah Desa</p>
+            <p class="kop-nama">NAMA DESA ANDA</p>
+            <p class="kop-alamat">Jl. Nama Jalan No. XX, Kecamatan ..., Kabupaten ..., Provinsi ... · Kode Pos XXXXX</p>
+          </div>
+          <div class="kop-right"></div>
         </div>
-        <div class="kop-right"></div>
-      </div>
-
-      <!-- JUDUL LAPORAN -->
-      <div class="judul-wrap">
-        <p class="judul-laporan">${judul}</p>
-        <div class="judul-line"></div>
-        <p class="judul-sub">Periode: ${tahunPilih && bulanPilih ? `${BULAN[Number(bulanPilih) - 1]} ${tahunPilih}` : "Semua Periode"}</p>
-      </div>
-
-      <!-- INFO ROW -->
-      <div class="info-row">
-        <span>Dicetak: ${tglCetak()}</span>
-        <span>Jumlah Data: ${pagedItems.length} record</span>
-        <span>Sistem: SmartHealth Village</span>
-      </div>
-
-      <!-- TABEL DATA -->
-      <table>
-        <thead>
-          <tr>${getHeaders().map(h => `<th>${h}</th>`).join("")}</tr>
-        </thead>
-        <tbody>
-          ${getRows()}
-        </tbody>
-      </table>
-
-      <!-- TANDA TANGAN -->
-      <div class="footer">
-        <div class="ttd-box">
-          <p class="ttd-kota">..., ${tglCetak()}</p>
-          <p class="ttd-jabatan">Kepala Desa / Bidan Desa</p>
-          <div class="ttd-garis"></div>
-          <p class="ttd-nama">( _________________ )</p>
+        <div class="judul-wrap">
+          <p class="judul-laporan">${judul}</p>
+          <div class="judul-line"></div>
+          <p class="judul-sub">Periode: ${tahunPilih && bulanPilih ? `${BULAN[Number(bulanPilih)-1]} ${tahunPilih}` : "Semua Periode"}</p>
         </div>
-      </div>
+        <div class="info-row">
+          <span>Dicetak: ${tglCetak()}</span>
+          <span>Jumlah Data: ${pagedItems.length} record</span>
+          <span>Sistem: SmartHealth Village</span>
+        </div>
+        <table>
+          <thead><tr>${getHeaders().map(h=>`<th>${h}</th>`).join("")}</tr></thead>
+          <tbody>${getRows()}</tbody>
+        </table>
+        <div class="footer">
+          <div class="ttd-box">
+            <p class="ttd-kota">..., ${tglCetak()}</p>
+            <p class="ttd-jabatan">Kepala Desa / Bidan Desa</p>
+            <div class="ttd-garis"></div>
+            <p class="ttd-nama">( _________________ )</p>
+          </div>
+        </div>
+      </body></html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+  }
 
-    </body>
-    </html>
-  `);
-  win.document.close();
-  win.focus();
-  setTimeout(() => win.print(), 500);
-}
 
+  /* ══════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════ */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#1f2d1f" }}>
 
@@ -508,16 +453,13 @@ export default function LaporanPage() {
         .btn-pdf:hover { background:#246240; }
         .section-title { font-size:15px;font-weight:700;color:#1f2d1f; }
         .section-sub   { font-size:12px;color:#9aab9a;margin-top:2px; }
-        .badge-green  { background:#e8f5ed;color:#2d7a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-yellow { background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-red    { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
       `}</style>
 
       {/* ── SECTION TAB ── */}
       <div style={{ display: "flex", gap: 6, background: "#fff", border: "1px solid #e4ede6", borderRadius: 14, padding: 5, width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {[
-          { id: "data",     label: "Data Balita & Lansia",         icon: Users    },
-          { id: "posyandu", label: "Data Posyandu Balita & Lansia", icon: FileText },
+          { id: "data",     label: "Data Balita & Lansia",          icon: Users    },
+          { id: "posyandu", label: "Data Posyandu Balita & Lansia",  icon: FileText },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setSection(id)} style={{
             display: "flex", alignItems: "center", gap: 7,
@@ -534,28 +476,23 @@ export default function LaporanPage() {
         ))}
       </div>
 
+
       {/* ══════════ SECTION 1: DATA BALITA & LANSIA ══════════ */}
       {section === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fadeIn 0.3s ease" }}>
 
-          {/* Filter kategori */}
+          {/* Pilih kategori */}
           <div className="card" style={{ padding: "18px 22px" }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: "#3d5542", marginBottom: 12 }}>Pilih Kategori</p>
             <div style={{ display: "flex", gap: 10 }}>
-              {[
-                { id: "balita", label: "Balita", icon: Baby  },
-                { id: "lansia", label: "Lansia", icon: Users },
-              ].map(({ id, label, icon: Icon }) => (
-                <button key={id}
-                  className={`kat-btn ${kategoriData === id ? "active" : ""}`}
-                  onClick={() => setKategoriData(id)}>
+              {[{ id: "balita", label: "Balita", icon: Baby }, { id: "lansia", label: "Lansia", icon: Users }].map(({ id, label, icon: Icon }) => (
+                <button key={id} className={`kat-btn ${kategoriData === id ? "active" : ""}`} onClick={() => setKategoriData(id)}>
                   <Icon size={15} /> {label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Konten data */}
           {!kategoriData
             ? <div className="card"><PilihKategori /></div>
             : (
@@ -568,16 +505,12 @@ export default function LaporanPage() {
                     <p className="section-sub">{sortedData.length} data ditemukan</p>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-print" onClick={() => doPrint(printDataRef, judulData, pagedData, `${kategoriData}-data`)}>
-                    <Printer size={14} /> Print
-                    </button>
-                    <button className="btn-pdf" onClick={() => doPrint(printDataRef, judulData, pagedData, `${kategoriData}-data`)}>
-                      <Download size={14} /> Ekspor PDF
-                    </button>
+                    <button className="btn-print" onClick={() => doPrint(printDataRef, judulData, pagedData, `${kategoriData}-data`)}><Printer size={14} /> Print</button>
+                    <button className="btn-pdf"   onClick={() => doPrint(printDataRef, judulData, pagedData, `${kategoriData}-data`)}><Download size={14} /> Ekspor PDF</button>
                   </div>
                 </div>
 
-                {/* Tabel */}
+                {/* Tabel data */}
                 <div ref={printDataRef} className="card" style={{ overflow: "hidden" }}>
                   {loadingData
                     ? (
@@ -616,9 +549,7 @@ export default function LaporanPage() {
                                 ).map(({ label, field }) => (
                                   <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
                                     {field
-                                      ? <button className="th-btn" onClick={() => toggleSortData(field)}>
-                                          {label} <SortIcon field={field} active={sortFieldData === field} asc={sortAscData} />
-                                        </button>
+                                      ? <button className="th-btn" onClick={() => toggleSortData(field)}>{label} <SortIcon field={field} active={sortFieldData === field} asc={sortAscData} /></button>
                                       : <span style={{ fontSize: 12, fontWeight: 700, color: "#9aab9a" }}>{label}</span>
                                     }
                                   </th>
@@ -641,9 +572,7 @@ export default function LaporanPage() {
                                       {item.nama}
                                     </div>
                                   </td>
-                                  {kategoriData === "balita" && (
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{item.namaIbu || "-"}</td>
-                                  )}
+                                  {kategoriData === "balita" && <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{item.namaIbu || "-"}</td>}
                                   <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDate(item.tglLahir)}</td>
                                   <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{hitungUsia(item.tglLahir)}</td>
                                   <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{item.noTelp || "-"}</td>
@@ -672,71 +601,52 @@ export default function LaporanPage() {
         </div>
       )}
 
+
       {/* ══════════ SECTION 2: DATA POSYANDU ══════════ */}
       {section === "posyandu" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 16, animation: "fadeIn 0.3s ease" }}>
 
           {/* Filter */}
           <div className="card" style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: 16 }}>
-
-            {/* Kategori */}
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: "#3d5542", marginBottom: 12 }}>Pilih Kategori</p>
               <div style={{ display: "flex", gap: 10 }}>
-                {[
-                  { id: "balita", label: "Balita", icon: Baby  },
-                  { id: "lansia", label: "Lansia", icon: Users },
-                ].map(({ id, label, icon: Icon }) => (
-                  <button key={id}
-                    className={`kat-btn ${kategoriPos === id ? "active" : ""}`}
-                    onClick={() => setKategoriPos(id)}>
+                {[{ id: "balita", label: "Balita", icon: Baby }, { id: "lansia", label: "Lansia", icon: Users }].map(({ id, label, icon: Icon }) => (
+                  <button key={id} className={`kat-btn ${kategoriPos === id ? "active" : ""}`} onClick={() => setKategoriPos(id)}>
                     <Icon size={15} /> {label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Filter waktu bertingkat */}
             {kategoriPos && (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 12, flexWrap: "wrap", paddingTop: 4, borderTop: "1px solid #f0f6f2" }}>
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#3d5542", marginBottom: 8 }}>Filter Tahun</p>
-                  <select className="sel" value={tahunPilih}
-                    onChange={e => { setTahunPilih(e.target.value); setBulanPilih(""); }}
-                    style={{ minWidth: 130 }}>
+                  <select className="sel" value={tahunPilih} onChange={e => { setTahunPilih(e.target.value); setBulanPilih(""); }} style={{ minWidth: 130 }}>
                     <option value="">-- Semua Tahun --</option>
                     {tahunList.map(y => <option key={y} value={y}>{y}</option>)}
                   </select>
                 </div>
-
                 <div>
                   <p style={{ fontSize: 13, fontWeight: 700, color: "#3d5542", marginBottom: 8 }}>Filter Bulan</p>
-                  <select className="sel" value={bulanPilih} disabled={!tahunPilih}
-                    onChange={e => setBulanPilih(e.target.value)}
-                    style={{ minWidth: 160 }}>
+                  <select className="sel" value={bulanPilih} disabled={!tahunPilih} onChange={e => setBulanPilih(e.target.value)} style={{ minWidth: 160 }}>
                     <option value="">-- Pilih Bulan --</option>
                     {BULAN.map((b, idx) => <option key={idx + 1} value={idx + 1}>{b}</option>)}
                   </select>
                 </div>
-
-                <button
-                  onClick={handleFilterPos}
-                  disabled={!tahunPilih || !bulanPilih}
-                  style={{ display: "flex", alignItems: "center", gap: 7, background: (!tahunPilih || !bulanPilih) ? "#b5ceba" : "#2d7a4f", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: (!tahunPilih || !bulanPilih) ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", transition: "background 0.2s" }}>
+                <button onClick={handleFilterPos} disabled={!tahunPilih || !bulanPilih}
+                  style={{ display: "flex", alignItems: "center", gap: 7, background: (!tahunPilih || !bulanPilih) ? "#b5ceba" : "#2d7a4f", color: "#fff", border: "none", padding: "10px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: (!tahunPilih || !bulanPilih) ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
                   <Filter size={14} /> Filter
                 </button>
-
-                <button
-                  onClick={handleResetFilter}
-                  disabled={!tahunPilih && !bulanPilih}
-                  style={{ display: "flex", alignItems: "center", gap: 7, background: "#fff", color: (!tahunPilih && !bulanPilih) ? "#b5ceba" : "#2d7a4f", border: `1.5px solid ${(!tahunPilih && !bulanPilih) ? "#e4ede6" : "#b8ddc5"}`, padding: "10px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: (!tahunPilih && !bulanPilih) ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif", transition: "all 0.2s" }}>
+                <button onClick={handleResetFilter} disabled={!tahunPilih && !bulanPilih}
+                  style={{ display: "flex", alignItems: "center", gap: 7, background: "#fff", color: (!tahunPilih && !bulanPilih) ? "#b5ceba" : "#2d7a4f", border: `1.5px solid ${(!tahunPilih && !bulanPilih) ? "#e4ede6" : "#b8ddc5"}`, padding: "10px 18px", borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: (!tahunPilih && !bulanPilih) ? "not-allowed" : "pointer", fontFamily: "'Plus Jakarta Sans',sans-serif" }}>
                   <RotateCcw size={14} /> Reset
                 </button>
               </div>
             )}
           </div>
 
-          {/* Konten posyandu */}
           {!kategoriPos
             ? <div className="card"><PilihKategori /></div>
             : (
@@ -749,16 +659,12 @@ export default function LaporanPage() {
                     <p className="section-sub">{sortedPos.length} data ditemukan</p>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
-                    <button className="btn-print" onClick={() => doPrint(printPosRef, judulPos, pagedPos, `${kategoriPos}-posyandu`)}>
-                      <Printer size={14} /> Print
-                    </button>
-                    <button className="btn-pdf" onClick={() => doPrint(printPosRef, judulPos, pagedPos, `${kategoriPos}-posyandu`)}>
-                      <Download size={14} /> Ekspor PDF
-                    </button>
+                    <button className="btn-print" onClick={() => doPrint(printPosRef, judulPos, pagedPos, `${kategoriPos}-posyandu`)}><Printer size={14} /> Print</button>
+                    <button className="btn-pdf"   onClick={() => doPrint(printPosRef, judulPos, pagedPos, `${kategoriPos}-posyandu`)}><Download size={14} /> Ekspor PDF</button>
                   </div>
                 </div>
 
-                {/* Tabel */}
+                {/* Tabel posyandu */}
                 <div ref={printPosRef} className="card" style={{ overflow: "hidden" }}>
                   {loadingPos
                     ? (
@@ -768,48 +674,58 @@ export default function LaporanPage() {
                           Memuat data…
                         </div>
                       </div>
-                    ) : posData.length === 0
+                    )
+                    : posData.length === 0
                       ? (
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 24px", gap: 12 }}>
-                          <div style={{ background: "#fef3c7", borderRadius: "50%", padding: 18 }}>
-                            <Calendar size={28} color="#d97706" />
-                          </div>
+                          <div style={{ background: "#fef3c7", borderRadius: "50%", padding: 18 }}><Calendar size={28} color="#d97706" /></div>
                           <p style={{ fontSize: 14, fontWeight: 600, color: "#6b7c6b" }}>Tidak ada data pada periode ini</p>
                         </div>
-                      ) : (
+                      )
+                      : (
                         <>
                           <div style={{ overflowX: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                               <thead>
                                 <tr style={{ background: "#f8fbf9" }}>
-                                  {(kategoriPos === "balita"
-                                    ? [
-                                        { label: "No",              field: null            },
-                                        { label: "Nama Balita",     field: "balitaId"      },
-                                        { label: "Kegiatan",        field: "kegiatan"      },
-                                        { label: "Tanggal",         field: "tanggal"       },
-                                        { label: "BB (kg)",         field: "bb"            },
-                                        { label: "TB (cm)",         field: "tb"            },
-                                        { label: "Lk. Kepala (cm)", field: "lingkarKepala" },
-                                        
-                                      ]
-                                    : [
-                                        { label: "No",                 field: null           },
-                                        { label: "Nama Lansia",        field: "lansiaId"     },
-                                        { label: "Kegiatan",           field: "kegiatan"     },
-                                        { label: "Tanggal",            field: "tanggal"      },
-                                        { label: "BB (kg)",            field: "bb"           },
-                                        { label: "TB (cm)",            field: "tb"           },
-                                        { label: "Lk. Perut (cm)",     field: "lingkarPerut" },
-                                        { label: "Tensi (mmHg)",       field: "tensi"        },
-                                        { label: "Gula Darah (mg/dL)", field: "gulaDarah"    },
-                                      ]
-                                  ).map(({ label, field }) => (
+                                  {/* ── Header Balita Posyandu (10 kolom) ── */}
+                                  {kategoriPos === "balita" && [
+                                    { label: "No",              field: null            },
+                                    { label: "Nama Balita",     field: "balitaId"      },
+                                    { label: "Kegiatan",        field: "kegiatan"      },
+                                    { label: "Tanggal",         field: "tanggal"       },
+                                    { label: "BB (kg)",         field: "bb"            },
+                                    { label: "TB (cm)",         field: "tb"            },
+                                    { label: "Lk. Kepala (cm)", field: "lingkarKepala" },
+                                    { label: "Lk. Lengan (cm)", field: "lingkarLengan" },
+                                    { label: "Status Gizi",     field: null            },
+                                    { label: "Status Stunting", field: null            },
+                                  ].map(({ label, field }) => (
                                     <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
                                       {field
-                                        ? <button className="th-btn" onClick={() => toggleSortPos(field)}>
-                                            {label} <SortIcon field={field} active={sortFieldPos === field} asc={sortAscPos} />
-                                          </button>
+                                        ? <button className="th-btn" onClick={() => toggleSortPos(field)}>{label} <SortIcon field={field} active={sortFieldPos === field} asc={sortAscPos} /></button>
+                                        : <span style={{ fontSize: 12, fontWeight: 700, color: "#9aab9a" }}>{label}</span>
+                                      }
+                                    </th>
+                                  ))}
+
+                                  {/* ── Header Lansia Posyandu (11 kolom) ── */}
+                                  {kategoriPos === "lansia" && [
+                                    { label: "No",                 field: null           },
+                                    { label: "Nama Lansia",        field: "lansiaId"     },
+                                    { label: "Kegiatan",           field: "kegiatan"     },
+                                    { label: "Tanggal",            field: "tanggal"      },
+                                    { label: "BB (kg)",            field: "bb"           },
+                                    { label: "TB (cm)",            field: "tb"           },
+                                    { label: "Lk. Perut (cm)",     field: "lingkarPerut" },
+                                    { label: "Tensi (mmHg)",       field: "tensi"        },
+                                    { label: "Status Tensi",       field: null           },
+                                    { label: "Gula Darah (mg/dL)", field: "gulaDarah"    },
+                                    { label: "Status Gula",        field: null           },
+                                  ].map(({ label, field }) => (
+                                    <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
+                                      {field
+                                        ? <button className="th-btn" onClick={() => toggleSortPos(field)}>{label} <SortIcon field={field} active={sortFieldPos === field} asc={sortAscPos} /></button>
                                         : <span style={{ fontSize: 12, fontWeight: 700, color: "#9aab9a" }}>{label}</span>
                                       }
                                     </th>
@@ -818,34 +734,67 @@ export default function LaporanPage() {
                               </thead>
                               <tbody>
 
-                                {/* Row balita */}
-                                {kategoriPos === "balita" && pagedPos.map((p, i) => (
-                                  <tr key={p.id} className="tr-row">
-                                    <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{(pagePos - 1) * perPagePos + i + 1}</td>
-                                    <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.balita?.nama ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDate(p.tanggal)}</td>
-                                    <td style={{ padding: "12px 14px", fontWeight: 700, color: p.bb && p.bb < 10 ? "#d97706" : "#1f2d1f" }}>{p.bb ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                                  
-                                  </tr>
-                                ))}
+                                {/* ── Row Balita Posyandu ── */}
+                                {kategoriPos === "balita" && pagedPos.map((p, i) => {
+                                  const usiaBulan = hitungUsiaBulanPadaTanggal(p.balita?.tglLahir, p.tanggal);
+                                  const giziCfg   = getStatusBB(p.bb, p.balita?.tglLahir);
+                                  const stunting  = hitungStatusStunting(p.tb, usiaBulan, p.balita?.jenisKelamin);
+                                  return (
+                                    <tr key={p.id} className="tr-row">
+                                      <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{(pagePos - 1) * perPagePos + i + 1}</td>
+                                      <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.balita?.nama ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDate(p.tanggal)}</td>
+                                      <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarLengan ?? "-"}</td>
 
-                                {/* Row lansia */}
-                                {kategoriPos === "lansia" && pagedPos.map((p, i) => (
-                                  <tr key={p.id} className="tr-row">
-                                    <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{(pagePos - 1) * perPagePos + i + 1}</td>
-                                    <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.lansia?.nama ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDate(p.tanggal)}</td>
-                                    <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarPerut ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", fontWeight: 700, color: p.tensi && p.tensi > 140 ? "#dc2626" : "#1f2d1f" }}>{p.tensi ?? "-"}</td>
-                                    <td style={{ padding: "12px 14px", fontWeight: 700, color: p.gulaDarah && p.gulaDarah > 200 ? "#dc2626" : "#1f2d1f" }}>{p.gulaDarah ?? "-"}</td>
-                                  </tr>
-                                ))}
+                                      {/* Status Gizi */}
+                                      <td style={{ padding: "10px 14px" }}>
+                                        <StatusBadge cfg={giziCfg} />
+                                      </td>
+
+                                      {/* Status Stunting */}
+                                      <td style={{ padding: "10px 14px" }}>
+                                        <StatusBadge cfg={stunting} zScore={stunting?.zScore} />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+
+                                {/* ── Row Lansia Posyandu ── */}
+                                {kategoriPos === "lansia" && pagedPos.map((p, i) => {
+                                  const tensiCfg = getStatusTensi(p.tensi);
+                                  const gulaCfg  = getStatusGula(p.gulaDarah);
+                                  return (
+                                    <tr key={p.id} className="tr-row">
+                                      <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{(pagePos - 1) * perPagePos + i + 1}</td>
+                                      <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.lansia?.nama ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDate(p.tanggal)}</td>
+                                      <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
+                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarPerut ?? "-"}</td>
+
+                                      {/* Tensi (nilai) */}
+                                      <td style={{ padding: "12px 14px", fontWeight: 700, color: tensiCfg?.color ?? "#1f2d1f" }}>{p.tensi ?? "-"}</td>
+
+                                      {/* Status Tensi */}
+                                      <td style={{ padding: "10px 14px" }}>
+                                        <StatusBadge cfg={tensiCfg} />
+                                      </td>
+
+                                      {/* Gula Darah (nilai) */}
+                                      <td style={{ padding: "12px 14px", fontWeight: 700, color: gulaCfg?.color ?? "#1f2d1f" }}>{p.gulaDarah ?? "-"}</td>
+
+                                      {/* Status Gula */}
+                                      <td style={{ padding: "10px 14px" }}>
+                                        <StatusBadge cfg={gulaCfg} />
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
 
                               </tbody>
                             </table>
