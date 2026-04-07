@@ -43,19 +43,19 @@ const hitungUsia = (tgl) => {
 /* ── Status Tensi ── */
 function getStatusTensi(tensi) {
   if (!tensi) return null;
-  if (tensi >= 160) return { status: "tinggi2", label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", icon: "🔴" };
-  if (tensi >= 140) return { status: "tinggi1", label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", icon: "🔴" };
-  if (tensi >= 120) return { status: "prehiper", label: "Pra-Hipertensi",  color: "#d97706", bg: "#fef3c7", icon: "🟡" };
-  if (tensi < 90)   return { status: "rendah",  label: "Tensi Rendah",    color: "#d97706", bg: "#fef3c7", icon: "🟡" };
-  return               { status: "normal",  label: "Normal",          color: "#2d7a4f", bg: "#e8f5ed", icon: "🟢" };
+  if (tensi >= 160) return { status: "tinggi2",  label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 140) return { status: "tinggi1",  label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 120) return { status: "prehiper", label: "Pra-Hipertensi",   color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  if (tensi < 90)   return { status: "rendah",   label: "Tensi Rendah",     color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  return               { status: "normal",   label: "Normal",           color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
 }
 
 /* ── Status Gula Darah ── */
 function getStatusGula(gula) {
   if (!gula) return null;
-  if (gula >= 200)  return { label: "Diabetes",    color: "#dc2626", bg: "#fee2e2" };
-  if (gula >= 100)  return { label: "Pra-Diabetes", color: "#d97706", bg: "#fef3c7" };
-  return               { label: "Normal",       color: "#2d7a4f", bg: "#e8f5ed" };
+  if (gula >= 200) return { label: "Diabetes",     color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (gula >= 100) return { label: "Pra-Diabetes", color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  return              { label: "Normal",        color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
 }
 
 /* ══════════════════════════════════════════
@@ -64,10 +64,9 @@ function getStatusGula(gula) {
 function DetailModal({ data, onClose }) {
   if (!data) return null;
 
-  const tensiStatus = data.tensi     ? getStatusTensi(parseFloat(data.tensi))     : null;
-  const gulaStatus  = data.gulaDarah ? getStatusGula(parseFloat(data.gulaDarah))  : null;
+  const tensiStatus = data.tensi     ? getStatusTensi(parseFloat(data.tensi))    : null;
+  const gulaStatus  = data.gulaDarah ? getStatusGula(parseFloat(data.gulaDarah)) : null;
 
-  /* ── Saran per kondisi tensi ── */
   const saranTensi = {
     normal: {
       judul: "Pertahankan Tekanan Darah Normal",
@@ -130,7 +129,6 @@ function DetailModal({ data, onClose }) {
     },
   };
 
-  /* ── Saran gula darah ── */
   const saranGula = {
     Normal: {
       judul: "Pertahankan Kadar Gula Normal",
@@ -182,7 +180,6 @@ function DetailModal({ data, onClose }) {
         zIndex: 201, fontFamily: "'Plus Jakarta Sans',sans-serif",
         animation: "popIn 0.22s cubic-bezier(0.16,1,0.3,1)"
       }}>
-
         {/* Header */}
         <div style={{ padding: "18px 20px 14px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#fff", zIndex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -238,11 +235,11 @@ function DetailModal({ data, onClose }) {
             <p style={{ fontSize: 11, fontWeight: 700, color: "#9aab9a", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Hasil Pengukuran</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { label: "Berat Badan",   value: data.bb          ? `${data.bb} kg`          : "-", accent: true,  c: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" },
-                { label: "Tinggi Badan",  value: data.tb          ? `${data.tb} cm`          : "-", accent: true,  c: "#0284c7", bg: "#e0f2fe", border: "#bae6fd" },
-                { label: "Lingkar Perut", value: data.lingkarPerut ? `${data.lingkarPerut} cm` : "-", accent: false },
-                { label: "Tensi",         value: data.tensi       ? `${data.tensi} mmHg`     : "-", accent: !!data.tensi, c: tensiStatus?.color ?? "#dc2626", bg: tensiStatus?.bg ?? "#fee2e2", border: (tensiStatus?.color ?? "#dc2626") + "40" },
-                { label: "Gula Darah",    value: data.gulaDarah   ? `${data.gulaDarah} mg/dL` : "-", accent: !!data.gulaDarah, c: gulaStatus?.color ?? "#6b7c6b", bg: gulaStatus?.bg ?? "#f8fbf9", border: (gulaStatus?.color ?? "#9aab9a") + "40" },
+                { label: "Berat Badan",   value: data.bb           ? `${data.bb} kg`           : "-", accent: true,         c: "#2d7a4f",                       bg: "#e8f5ed",                      border: "#b8ddc5" },
+                { label: "Tinggi Badan",  value: data.tb           ? `${data.tb} cm`           : "-", accent: true,         c: "#0284c7",                       bg: "#e0f2fe",                      border: "#bae6fd" },
+                { label: "Lingkar Perut", value: data.lingkarPerut ? `${data.lingkarPerut} cm`  : "-", accent: false },
+                { label: "Tensi",         value: data.tensi        ? `${data.tensi} mmHg`      : "-", accent: !!data.tensi, c: tensiStatus?.color ?? "#dc2626", bg: tensiStatus?.bg ?? "#fee2e2",   border: (tensiStatus?.color ?? "#dc2626") + "40" },
+                { label: "Gula Darah",    value: data.gulaDarah    ? `${data.gulaDarah} mg/dL`  : "-", accent: !!data.gulaDarah, c: gulaStatus?.color ?? "#6b7c6b", bg: gulaStatus?.bg ?? "#f8fbf9", border: (gulaStatus?.color ?? "#9aab9a") + "40" },
               ].map(({ label, value, accent, c, bg, border }) => (
                 <div key={label} style={{ background: accent ? bg : "#f8fbf9", border: `1px solid ${accent ? border : "#f0f6f2"}`, borderRadius: 10, padding: "10px 12px" }}>
                   <p style={{ fontSize: 11, color: accent ? c : "#9aab9a", fontWeight: 600 }}>{label}</p>
@@ -279,7 +276,6 @@ function DetailModal({ data, onClose }) {
               </div>
             </div>
           )}
-
         </div>
 
         <div style={{ padding: "12px 20px", borderTop: "1px solid #f0f6f2", position: "sticky", bottom: 0, background: "#fff" }}>
@@ -483,7 +479,6 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
     getJadwalTerdekat().then(setJadwalList).finally(() => setLoadingJadwal(false));
   }, []);
 
-  /* Preview status tensi real-time */
   const tensiPreview = pemForm.tensi ? getStatusTensi(parseFloat(pemForm.tensi)) : null;
 
   function handleChange(e) {
@@ -517,7 +512,6 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
       <div onClick={onClose} style={{ position: "fixed", inset: 0, background: "rgba(15,30,15,0.35)", backdropFilter: "blur(4px)", zIndex: 200 }} />
       <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "min(520px,100vw)", background: "#fff", boxShadow: "-8px 0 40px rgba(0,0,0,0.12)", zIndex: 201, display: "flex", flexDirection: "column", fontFamily: "'Plus Jakarta Sans',sans-serif", animation: "slideInRight 0.28s cubic-bezier(0.16,1,0.3,1)" }}>
 
-        {/* Header */}
         <div style={{ padding: "20px 22px 16px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ background: isEdit ? "#fef3c7" : "#f3f0ff", borderRadius: 10, padding: 9 }}>
@@ -622,7 +616,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
             </div>
           </div>
 
-          {/* Preview Status Tensi — seperti preview stunting di balita */}
+          {/* Preview Status Tensi */}
           {tensiPreview && (
             <div style={{ marginTop: 16, background: tensiPreview.bg, border: `1.5px solid ${tensiPreview.color}40`, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 20 }}>{tensiPreview.icon}</span>
@@ -676,14 +670,8 @@ export default function PosyanduLansiaPage() {
   const [deletingPem, setDeletingPem]         = useState(false);
   const [searchPem, setSearchPem]             = useState("");
   const [detailData, setDetailData]           = useState(null);
-   // ← state detail modal
 
-  
-
-  useEffect(() => { 
-
-    loadAll(); }, []);
-
+  useEffect(() => { loadAll(); }, []);
 
   async function loadAll() {
     setLoadingLansia(true);
@@ -777,6 +765,25 @@ export default function PosyanduLansiaPage() {
     p.kegiatan?.toLowerCase().includes(searchPem.toLowerCase())
   );
 
+  /* ── Helper render badge status ── */
+  function BadgeTensi({ tensiSt }) {
+    if (!tensiSt) return <span className="badge-nodata">—</span>;
+    if (tensiSt.status === "tinggi2" || tensiSt.status === "tinggi1")
+      return <span className="badge-tinggi">{tensiSt.icon} {tensiSt.label}</span>;
+    if (tensiSt.status === "prehiper" || tensiSt.status === "rendah")
+      return <span className="badge-prehiper">{tensiSt.icon} {tensiSt.label}</span>;
+    return <span className="badge-normal">{tensiSt.icon} {tensiSt.label}</span>;
+  }
+
+  function BadgeGula({ gulaSt }) {
+    if (!gulaSt) return <span className="badge-nodata">—</span>;
+    if (gulaSt.label === "Diabetes")
+      return <span className="badge-tinggi">{gulaSt.icon} {gulaSt.label}</span>;
+    if (gulaSt.label === "Pra-Diabetes")
+      return <span className="badge-prehiper">{gulaSt.icon} {gulaSt.label}</span>;
+    return <span className="badge-normal">{gulaSt.icon} {gulaSt.label}</span>;
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20, fontFamily: "'Plus Jakarta Sans',sans-serif", color: "#1f2d1f" }}>
 
@@ -794,8 +801,8 @@ export default function PosyanduLansiaPage() {
         .search-inp { border:1.5px solid #e4ede6;border-radius:10px;padding:8px 12px 8px 36px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;width:240px;transition:border-color 0.2s; }
         .search-inp:focus { border-color:#2d7a4f; }
         .search-inp::placeholder { color:#9aab9a; }
-        .btn-tambah { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,58,237,0.25); }
-        .btn-tambah:hover { background:#6d28d9;transform:translateY(-1px); }
+        .btn-tambah { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(45,122,79,0.25); }
+        .btn-tambah:hover { background:#245f3d;transform:translateY(-1px); }
         .btn-edit   { display:inline-flex;align-items:center;gap:5px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
         .btn-edit:hover   { background:#fde68a; }
         .btn-hapus  { display:inline-flex;align-items:center;gap:5px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s; }
@@ -805,24 +812,24 @@ export default function PosyanduLansiaPage() {
         .stat-card { background:#fff;border:1px solid #e4ede6;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;align-items:center;gap:13px;position:relative;overflow:hidden;transition:transform 0.18s; }
         .stat-card:hover { transform:translateY(-2px); }
         .input-field { width:100%;border:1.5px solid #e4ede6;border-radius:10px;padding:10px 12px 10px 38px;font-size:14px;font-family:'Plus Jakarta Sans',sans-serif;color:#1f2d1f;background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
-        .input-field:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(124,58,237,0.1); }
+        .input-field:focus { border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,0.1); }
         .input-field::placeholder { color:#b5ceba; }
         .input-field.error { border-color:#dc2626; }
         .label { display:block;font-size:13px;font-weight:700;color:#3d5542;margin-bottom:6px; }
         .btn-outline { display:inline-flex;align-items:center;gap:7px;background:#fff;color:#2d7a4f;border:1.5px solid #ddd6fe;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s; }
         .btn-outline:hover { background:#f5f3ff; }
-        .btn-primary { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,58,237,0.28); }
-        .btn-primary:hover { background:#6d28d9;transform:translateY(-1px); }
+        .btn-primary { display:inline-flex;align-items:center;gap:7px;background:#2d7a4f;color:#fff;border:none;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;box-shadow:0 4px 14px rgba(45,122,79,0.28); }
+        .btn-primary:hover { background:#245f3d;transform:translateY(-1px); }
         .card { background:#fff;border:1px solid #e4ede6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04); }
         .section-title { font-size:15px;font-weight:700;color:#1f2d1f; }
         .section-sub   { font-size:12px;color:#9aab9a;margin-top:2px; }
-        .badge-normal  { background:#e8f5ed;color:#2d7a4f;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-prehiper{ background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-tinggi  { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
-        .badge-nodata  { background:#f3f4f6;color:#9ca3af;font-size:11px;font-weight:600;padding:3px 10px;border-radius:50px; }
-        .badge-laki    { display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700; }
+        .badge-normal   { display:inline-flex;align-items:center;gap:4px;background:#e8f5ed;color:#2d7a4f;border:1px solid #b8ddc5;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;white-space:nowrap; }
+        .badge-prehiper { display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#d97706;border:1px solid #fde68a;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;white-space:nowrap; }
+        .badge-tinggi   { display:inline-flex;align-items:center;gap:4px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;font-size:11px;font-weight:700;padding:4px 10px;border-radius:8px;white-space:nowrap; }
+        .badge-nodata   { display:inline-flex;align-items:center;background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;font-size:11px;font-weight:600;padding:4px 10px;border-radius:8px; }
+        .badge-laki     { display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700; }
         .badge-perempuan { display:inline-flex;align-items:center;gap:4px;background:#fce7f3;color:#be185d;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700; }
-        .badge-null    { display:inline-flex;align-items:center;background:#f3f4f6;color:#9ca3af;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600; }
+        .badge-null     { display:inline-flex;align-items:center;background:#f3f4f6;color:#9ca3af;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600; }
       `}</style>
 
       {/* TOAST */}
@@ -845,7 +852,7 @@ export default function PosyanduLansiaPage() {
             color: tab === id ? "#fff" : "#6b7c6b",
             border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14,
             fontFamily: "'Plus Jakarta Sans',sans-serif",
-            boxShadow: tab === id ? "0 2px 8px rgba(124,58,237,0.25)" : "none",
+            boxShadow: tab === id ? "0 2px 8px rgba(45,122,79,0.25)" : "none",
             transition: "all 0.18s",
           }}>
             <Icon size={15} /> {label}
@@ -858,7 +865,7 @@ export default function PosyanduLansiaPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {[
-              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#f3f0ff" },
+              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#e8f5ed" },
               { icon: AlertTriangle, label: "Risiko Tinggi",  value: loadingLansia ? "–" : risikoTinggi, sub: "Tensi/gula darah tinggi", accent: "#be185d", bg: "#fce7f3" },
               { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",   accent: "#d97706", bg: "#fef3c7" },
             ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
@@ -1004,14 +1011,22 @@ export default function PosyanduLansiaPage() {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
-                    {["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut (cm)","Tensi (mmHg)","Gula Darah (mg/dL)","Status","Aksi"].map(h => (
-                      <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 12, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap" }}>{h}</th>
+                    {[
+                      "No", "Nama Lansia", "Kegiatan", "Tanggal",
+                      "BB (kg)", "TB (cm)", "Lk. Perut (cm)",
+                      "Tensi (mmHg)", "Status Tensi",
+                      "Gula Darah (mg/dL)", "Status Gula",
+                      "Aksi"
+                    ].map(h => (
+                      <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 11, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap", letterSpacing: 0.3 }}>
+                        {h.toUpperCase()}
+                      </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loadingPem && (
-                    <tr><td colSpan={11} style={{ padding: "44px", textAlign: "center" }}>
+                    <tr><td colSpan={12} style={{ padding: "44px", textAlign: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, color: "#9aab9a" }}>
                         <div style={{ width: 18, height: 18, border: "2.5px solid #e4ede6", borderTopColor: "#2d7a4f", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                         Memuat data…
@@ -1019,35 +1034,79 @@ export default function PosyanduLansiaPage() {
                     </td></tr>
                   )}
                   {!loadingPem && filteredPem.length === 0 && (
-                    <tr><td colSpan={11} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
+                    <tr><td colSpan={12} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
                   )}
                   {!loadingPem && filteredPem.map((p, i) => {
-                    const tensiSt = p.tensi ? getStatusTensi(parseFloat(p.tensi)) : null;
+                    const tensiSt = p.tensi     ? getStatusTensi(parseFloat(p.tensi))     : null;
+                    const gulaSt  = p.gulaDarah ? getStatusGula(parseFloat(p.gulaDarah))  : null;
                     return (
                       <tr key={p.id} className="tr-row">
-                        <td style={{ padding: "12px 14px", color: "#9aab9a" }}>{i + 1}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 600, color: "#1f2d1f" }}>{p.lansia?.nama ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.kegiatan}</td>
-                        <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap" }}>{formatDisplay(p.tanggal)}</td>
-                        <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.bb ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", color: "#1f2d1f", fontWeight: 600 }}>{p.tb ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarPerut ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 700, color: tensiSt ? tensiSt.color : "#1f2d1f" }}>{p.tensi ?? "-"}</td>
-                        <td style={{ padding: "12px 14px", fontWeight: 700, color: p.gulaDarah > 200 ? "#dc2626" : p.gulaDarah >= 100 ? "#d97706" : "#1f2d1f" }}>{p.gulaDarah ?? "-"}</td>
+                        <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{i + 1}</td>
 
-                        {/* ── Kolom Status Tensi ── */}
+                        {/* Nama Lansia */}
                         <td style={{ padding: "12px 14px" }}>
-                          {tensiSt
-                            ? tensiSt.status === "tinggi2" || tensiSt.status === "tinggi1"
-                              ? <span className="badge-tinggi">{tensiSt.icon} {tensiSt.label}</span>
-                              : tensiSt.status === "prehiper" || tensiSt.status === "rendah"
-                              ? <span className="badge-prehiper">{tensiSt.icon} {tensiSt.label}</span>
-                              : <span className="badge-normal">{tensiSt.icon} {tensiSt.label}</span>
-                            : <span className="badge-nodata">-</span>
-                          }
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#f3f0ff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: "#7c3aed", flexShrink: 0 }}>
+                              {p.lansia?.nama?.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() ?? "?"}
+                            </div>
+                            <span style={{ fontWeight: 600, color: "#1f2d1f" }}>{p.lansia?.nama ?? "-"}</span>
+                          </div>
                         </td>
 
-                        {/* ── Kolom Aksi: Edit + Hapus + Detail ── */}
+                        {/* Kegiatan */}
+                        <td style={{ padding: "12px 14px" }}>
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#fdf0ff", color: "#7c3aed", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 700 }}>
+                            <Activity size={11} /> {p.kegiatan}
+                          </span>
+                        </td>
+
+                        {/* Tanggal */}
+                        <td style={{ padding: "12px 14px", color: "#6b7c6b", whiteSpace: "nowrap", fontSize: 12 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                            <Calendar size={11} color="#b5ceba" /> {formatDisplay(p.tanggal)}
+                          </div>
+                        </td>
+
+                        {/* BB */}
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>
+                          {p.bb ? <>{p.bb}<span style={{ fontSize: 11, fontWeight: 400, color: "#9aab9a" }}> kg</span></> : <span style={{ color: "#d1dbd2" }}>—</span>}
+                        </td>
+
+                        {/* TB */}
+                        <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>
+                          {p.tb ? <>{p.tb}<span style={{ fontSize: 11, fontWeight: 400, color: "#9aab9a" }}> cm</span></> : <span style={{ color: "#d1dbd2" }}>—</span>}
+                        </td>
+
+                        {/* Lingkar Perut */}
+                        <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>
+                          {p.lingkarPerut ? <>{p.lingkarPerut}<span style={{ fontSize: 11, color: "#9aab9a" }}> cm</span></> : <span style={{ color: "#d1dbd2" }}>—</span>}
+                        </td>
+
+                        {/* Tensi (nilai) */}
+                        <td style={{ padding: "12px 14px" }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: tensiSt?.color ?? "#1f2d1f" }}>
+                            {p.tensi ? <>{p.tensi}<span style={{ fontSize: 11, fontWeight: 400, color: "#9aab9a" }}> mmHg</span></> : <span style={{ color: "#d1dbd2", fontWeight: 400 }}>—</span>}
+                          </span>
+                        </td>
+
+                        {/* Status Tensi */}
+                        <td style={{ padding: "12px 14px" }}>
+                          <BadgeTensi tensiSt={tensiSt} />
+                        </td>
+
+                        {/* Gula Darah (nilai) */}
+                        <td style={{ padding: "12px 14px" }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: gulaSt?.color ?? "#1f2d1f" }}>
+                            {p.gulaDarah ? <>{p.gulaDarah}<span style={{ fontSize: 11, fontWeight: 400, color: "#9aab9a" }}> mg/dL</span></> : <span style={{ color: "#d1dbd2", fontWeight: 400 }}>—</span>}
+                          </span>
+                        </td>
+
+                        {/* Status Gula */}
+                        <td style={{ padding: "12px 14px" }}>
+                          <BadgeGula gulaSt={gulaSt} />
+                        </td>
+
+                        {/* Aksi */}
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", gap: 6 }}>
                             <button className="btn-edit"   onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
@@ -1061,6 +1120,22 @@ export default function PosyanduLansiaPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Footer tabel */}
+            {!loadingPem && filteredPem.length > 0 && (
+              <div style={{ padding: "11px 20px", borderTop: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                <p style={{ color: "#9aab9a", fontSize: 12 }}>
+                  Menampilkan {filteredPem.length} dari {pemList.length} data pemeriksaan
+                </p>
+                {/* Legenda badge */}
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, color: "#9aab9a", fontWeight: 600 }}>Keterangan:</span>
+                  <span className="badge-normal">🟢 Normal</span>
+                  <span className="badge-prehiper">🟡 Waspada</span>
+                  <span className="badge-tinggi">🔴 Tinggi / Diabetes</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1098,8 +1173,6 @@ export default function PosyanduLansiaPage() {
           onConfirm={handleDeletePem}
         />
       )}
-
-      {/* ── Detail Modal ── */}
       {detailData && (
         <DetailModal
           data={detailData}
