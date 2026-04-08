@@ -470,7 +470,7 @@ function DeleteConfirmModal({ lansia, onClose, onConfirm, loading }) {
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving }) {
   const isEdit = !!editData;
-  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: toInputDate(editData.tanggal) } : INIT_FORM_PEM);
+  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: new Date().toISOString().split("T")[0] } : INIT_FORM_PEM);
   const [pemErr, setPemErr]               = useState({});
   const [jadwalList, setJadwalList]       = useState([]);
   const [loadingJadwal, setLoadingJadwal] = useState(true);
@@ -485,7 +485,7 @@ function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving 
     const { name, value } = e.target;
     if (name === "kegiatan") {
       const jadwalDipilih = jadwalList.find(j => j.kegiatan === value);
-      setPemForm(p => ({ ...p, kegiatan: value, tanggal: jadwalDipilih ? toInputDate(jadwalDipilih.tanggal) : p.tanggal }));
+      setPemForm(p => ({ ...p, kegiatan: value }));
     } else {
       setPemForm(p => ({ ...p, [name]: value }));
     }
@@ -1109,9 +1109,9 @@ export default function PosyanduLansiaPage() {
                         {/* Aksi */}
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", gap: 6 }}>
+                            <button className="btn-detail" onClick={() => setDetailData(p)}><Info size={12} /> Detail</button>
                             <button className="btn-edit"   onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
                             <button className="btn-hapus"  onClick={() => setDeletePemTarget(p)}><Trash2 size={12} /> Hapus</button>
-                            <button className="btn-detail" onClick={() => setDetailData(p)}><Info size={12} /> Detail</button>
                           </div>
                         </td>
                       </tr>

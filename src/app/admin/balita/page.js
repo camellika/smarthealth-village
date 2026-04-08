@@ -6,6 +6,8 @@ import { getBalita, createBalita, updateBalita, deleteBalita } from "@/services/
 import {
   getPosyanduBalita,
   createPosyanduBalita,
+  updatePosyanduBalita,
+  deletePosyanduBalita,
 } from "@/services/posyanduBalitaService";
 import {
   Baby, Plus, Search, ChevronDown, ChevronUp,
@@ -26,42 +28,42 @@ import { getJadwalTerdekat } from "@/services/penjadwalanService";
 // Data: median dan nilai -2SD, -3SD per bulan
 const WHO_TB_LAKI = [
   // [bulan, median, -2SD, -3SD]
-  [0,49.9,46.1,44.2],[1,54.7,50.8,48.9],[2,58.4,54.4,52.4],[3,61.4,57.3,55.3],
-  [4,63.9,59.7,57.6],[5,65.9,61.7,59.6],[6,67.6,63.3,61.2],[7,69.2,64.8,62.7],
-  [8,70.6,66.2,64.0],[9,72.0,67.5,65.2],[10,73.3,68.7,66.4],[11,74.5,69.9,67.6],
-  [12,75.7,71.0,68.6],[13,76.9,72.1,69.6],[14,78.0,73.1,70.6],[15,79.1,74.1,71.6],
-  [16,80.2,75.0,72.5],[17,81.2,75.9,73.4],[18,82.3,76.9,74.2],[19,83.2,77.7,75.0],
-  [20,84.2,78.6,75.9],[21,85.1,79.4,76.7],[22,86.0,80.2,77.4],[23,86.9,81.0,78.2],
-  [24,87.8,81.7,78.8],[25,88.7,82.6,79.6],[26,89.6,83.4,80.4],[27,90.4,84.2,81.1],
-  [28,91.2,84.9,81.8],[29,92.0,85.7,82.6],[30,92.9,86.5,83.3],[31,93.7,87.2,84.0],
-  [32,94.4,87.9,84.7],[33,95.2,88.6,85.4],[34,96.0,89.3,86.0],[35,96.7,90.0,86.7],
-  [36,97.4,90.7,87.3],[37,98.2,91.4,88.0],[38,98.9,92.0,88.6],[39,99.6,92.7,89.2],
-  [40,100.3,93.3,89.8],[41,101.0,93.9,90.4],[42,101.7,94.5,91.0],[43,102.4,95.1,91.6],
-  [44,103.1,95.7,92.2],[45,103.8,96.3,92.8],[46,104.4,96.9,93.3],[47,105.1,97.5,93.9],
-  [48,105.7,98.1,94.4],[49,106.4,98.7,95.0],[50,107.0,99.3,95.5],[51,107.6,99.8,96.0],
-  [52,108.2,100.4,96.6],[53,108.9,101.0,97.1],[54,109.5,101.5,97.6],[55,110.1,102.1,98.1],
-  [56,110.7,102.6,98.6],[57,111.3,103.1,99.2],[58,111.9,103.7,99.7],[59,112.5,104.2,100.2],
-  [60,113.0,104.7,100.7],
+  [0, 49.9, 46.1, 44.2], [1, 54.7, 50.8, 48.9], [2, 58.4, 54.4, 52.4], [3, 61.4, 57.3, 55.3],
+  [4, 63.9, 59.7, 57.6], [5, 65.9, 61.7, 59.6], [6, 67.6, 63.3, 61.2], [7, 69.2, 64.8, 62.7],
+  [8, 70.6, 66.2, 64.0], [9, 72.0, 67.5, 65.2], [10, 73.3, 68.7, 66.4], [11, 74.5, 69.9, 67.6],
+  [12, 75.7, 71.0, 68.6], [13, 76.9, 72.1, 69.6], [14, 78.0, 73.1, 70.6], [15, 79.1, 74.1, 71.6],
+  [16, 80.2, 75.0, 72.5], [17, 81.2, 75.9, 73.4], [18, 82.3, 76.9, 74.2], [19, 83.2, 77.7, 75.0],
+  [20, 84.2, 78.6, 75.9], [21, 85.1, 79.4, 76.7], [22, 86.0, 80.2, 77.4], [23, 86.9, 81.0, 78.2],
+  [24, 87.8, 81.7, 78.8], [25, 88.7, 82.6, 79.6], [26, 89.6, 83.4, 80.4], [27, 90.4, 84.2, 81.1],
+  [28, 91.2, 84.9, 81.8], [29, 92.0, 85.7, 82.6], [30, 92.9, 86.5, 83.3], [31, 93.7, 87.2, 84.0],
+  [32, 94.4, 87.9, 84.7], [33, 95.2, 88.6, 85.4], [34, 96.0, 89.3, 86.0], [35, 96.7, 90.0, 86.7],
+  [36, 97.4, 90.7, 87.3], [37, 98.2, 91.4, 88.0], [38, 98.9, 92.0, 88.6], [39, 99.6, 92.7, 89.2],
+  [40, 100.3, 93.3, 89.8], [41, 101.0, 93.9, 90.4], [42, 101.7, 94.5, 91.0], [43, 102.4, 95.1, 91.6],
+  [44, 103.1, 95.7, 92.2], [45, 103.8, 96.3, 92.8], [46, 104.4, 96.9, 93.3], [47, 105.1, 97.5, 93.9],
+  [48, 105.7, 98.1, 94.4], [49, 106.4, 98.7, 95.0], [50, 107.0, 99.3, 95.5], [51, 107.6, 99.8, 96.0],
+  [52, 108.2, 100.4, 96.6], [53, 108.9, 101.0, 97.1], [54, 109.5, 101.5, 97.6], [55, 110.1, 102.1, 98.1],
+  [56, 110.7, 102.6, 98.6], [57, 111.3, 103.1, 99.2], [58, 111.9, 103.7, 99.7], [59, 112.5, 104.2, 100.2],
+  [60, 113.0, 104.7, 100.7],
 ];
 
 // TB/U Perempuan (cm): [bulan, median, -2SD, -3SD]
 const WHO_TB_PEREMPUAN = [
-  [0,49.1,45.4,43.6],[1,53.7,49.8,47.8],[2,57.1,53.0,51.0],[3,59.8,55.6,53.5],
-  [4,62.1,57.8,55.6],[5,64.0,59.6,57.4],[6,65.7,61.2,59.0],[7,67.3,62.7,60.5],
-  [8,68.7,64.0,61.7],[9,70.1,65.3,63.0],[10,71.5,66.5,64.2],[11,72.8,67.7,65.4],
-  [12,74.0,68.9,66.5],[13,75.2,70.0,67.6],[14,76.4,71.1,68.7],[15,77.5,72.1,69.7],
-  [16,78.6,73.1,70.7],[17,79.7,74.1,71.7],[18,80.7,75.1,72.6],[19,81.7,76.0,73.5],
-  [20,82.7,76.9,74.4],[21,83.7,77.8,75.2],[22,84.6,78.7,76.1],[23,85.5,79.6,77.0],
-  [24,86.4,80.3,77.7],[25,87.4,81.3,78.6],[26,88.3,82.1,79.4],[27,89.1,82.9,80.2],
-  [28,90.0,83.8,81.0],[29,90.8,84.5,81.8],[30,91.6,85.3,82.5],[31,92.4,86.1,83.3],
-  [32,93.2,86.8,84.0],[33,94.0,87.5,84.7],[34,94.7,88.2,85.4],[35,95.4,88.9,86.0],
-  [36,96.1,89.6,86.7],[37,96.9,90.3,87.3],[38,97.6,91.0,87.9],[39,98.3,91.7,88.5],
-  [40,99.0,92.3,89.2],[41,99.7,92.9,89.8],[42,100.3,93.5,90.3],[43,101.0,94.2,90.9],
-  [44,101.6,94.8,91.5],[45,102.3,95.4,92.1],[46,102.9,96.0,92.6],[47,103.5,96.6,93.2],
-  [48,104.1,97.2,93.8],[49,104.8,97.7,94.3],[50,105.4,98.3,94.8],[51,106.0,98.8,95.4],
-  [52,106.5,99.4,95.9],[53,107.1,100.0,96.4],[54,107.7,100.5,97.0],[55,108.3,101.0,97.5],
-  [56,108.8,101.6,98.0],[57,109.4,102.1,98.5],[58,110.0,102.6,99.0],[59,110.5,103.1,99.5],
-  [60,111.0,103.7,100.0],
+  [0, 49.1, 45.4, 43.6], [1, 53.7, 49.8, 47.8], [2, 57.1, 53.0, 51.0], [3, 59.8, 55.6, 53.5],
+  [4, 62.1, 57.8, 55.6], [5, 64.0, 59.6, 57.4], [6, 65.7, 61.2, 59.0], [7, 67.3, 62.7, 60.5],
+  [8, 68.7, 64.0, 61.7], [9, 70.1, 65.3, 63.0], [10, 71.5, 66.5, 64.2], [11, 72.8, 67.7, 65.4],
+  [12, 74.0, 68.9, 66.5], [13, 75.2, 70.0, 67.6], [14, 76.4, 71.1, 68.7], [15, 77.5, 72.1, 69.7],
+  [16, 78.6, 73.1, 70.7], [17, 79.7, 74.1, 71.7], [18, 80.7, 75.1, 72.6], [19, 81.7, 76.0, 73.5],
+  [20, 82.7, 76.9, 74.4], [21, 83.7, 77.8, 75.2], [22, 84.6, 78.7, 76.1], [23, 85.5, 79.6, 77.0],
+  [24, 86.4, 80.3, 77.7], [25, 87.4, 81.3, 78.6], [26, 88.3, 82.1, 79.4], [27, 89.1, 82.9, 80.2],
+  [28, 90.0, 83.8, 81.0], [29, 90.8, 84.5, 81.8], [30, 91.6, 85.3, 82.5], [31, 92.4, 86.1, 83.3],
+  [32, 93.2, 86.8, 84.0], [33, 94.0, 87.5, 84.7], [34, 94.7, 88.2, 85.4], [35, 95.4, 88.9, 86.0],
+  [36, 96.1, 89.6, 86.7], [37, 96.9, 90.3, 87.3], [38, 97.6, 91.0, 87.9], [39, 98.3, 91.7, 88.5],
+  [40, 99.0, 92.3, 89.2], [41, 99.7, 92.9, 89.8], [42, 100.3, 93.5, 90.3], [43, 101.0, 94.2, 90.9],
+  [44, 101.6, 94.8, 91.5], [45, 102.3, 95.4, 92.1], [46, 102.9, 96.0, 92.6], [47, 103.5, 96.6, 93.2],
+  [48, 104.1, 97.2, 93.8], [49, 104.8, 97.7, 94.3], [50, 105.4, 98.3, 94.8], [51, 106.0, 98.8, 95.4],
+  [52, 106.5, 99.4, 95.9], [53, 107.1, 100.0, 96.4], [54, 107.7, 100.5, 97.0], [55, 108.3, 101.0, 97.5],
+  [56, 108.8, 101.6, 98.0], [57, 109.4, 102.1, 98.5], [58, 110.0, 102.6, 99.0], [59, 110.5, 103.1, 99.5],
+  [60, 111.0, 103.7, 100.0],
 ];
 
 /* ══════════════════════════════════════════
@@ -73,32 +75,32 @@ function hitungStatusStunting(tb, usiaBulan, jenisKelamin) {
 
   const tabel = jenisKelamin === "Perempuan" ? WHO_TB_PEREMPUAN : WHO_TB_LAKI;
   const bulan = Math.min(Math.round(usiaBulan), 60);
-  const row   = tabel.find(r => r[0] === bulan);
+  const row = tabel.find(r => r[0] === bulan);
   if (!row) return null;
 
   const [, median, sd2, sd3] = row;
-  const sd     = median - sd2; // ✅ BENAR — selisih median dengan -2SD
+  const sd = median - sd2; // ✅ BENAR — selisih median dengan -2SD
   const zScore = sd > 0 ? (tb - median) / sd : 0;
 
   let status, label, color, bg, icon;
   if (zScore < -3) {
     status = "severely_stunting";
-    label  = "Severely Stunting";
-    color  = "#dc2626";
-    bg     = "#fee2e2";
-    icon   = "🔴";
+    label = "Severely Stunting";
+    color = "#dc2626";
+    bg = "#fee2e2";
+    icon = "🔴";
   } else if (zScore < -2) {
     status = "stunting";
-    label  = "Stunting";
-    color  = "#d97706";
-    bg     = "#fef3c7";
-    icon   = "🟡";
+    label = "Stunting";
+    color = "#d97706";
+    bg = "#fef3c7";
+    icon = "🟡";
   } else {
     status = "normal";
-    label  = "Normal";
-    color  = "#2d7a4f";
-    bg     = "#e8f5ed";
-    icon   = "🟢";
+    label = "Normal";
+    color = "#2d7a4f";
+    bg = "#e8f5ed";
+    icon = "🟢";
   }
 
   return { zScore: zScore.toFixed(2), status, label, color, bg, icon, median, sd2, sd3 };
@@ -107,14 +109,14 @@ function hitungStatusStunting(tb, usiaBulan, jenisKelamin) {
 function hitungUsiaBulan(tglLahir, tglPemeriksaan) {
   if (!tglLahir) return null;
   const lahir = new Date(tglLahir);
-  const pem   = tglPemeriksaan ? new Date(tglPemeriksaan) : new Date();
-  const diff  = (pem - lahir) / (1000 * 60 * 60 * 24 * 30.44);
+  const pem = tglPemeriksaan ? new Date(tglPemeriksaan) : new Date();
+  const diff = (pem - lahir) / (1000 * 60 * 60 * 24 * 30.44);
   return Math.floor(diff);
 }
 
 /* ── helpers ── */
 const INIT_FORM = { nik: "", nama: "", namaIbu: "", alamat: "", noTelp: "", tglLahir: "", jenisKelamin: "" };
-const PEMERIKSAAN_INIT = { balitaId: "", kegiatan: "", bb: "", tb: "", lingkarKepala: "", lingkarLengan: ""};
+const PEMERIKSAAN_INIT = { balitaId: "", kegiatan: "", bb: "", tb: "", lingkarKepala: "", lingkarLengan: "" };
 
 const formatDate = (d) => {
   if (!d) return "-";
@@ -127,13 +129,13 @@ const formatDisplay = (d) => {
 const toInputDate = (d) => {
   if (!d) return "";
   const dt = new Date(d);
-  const mm  = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd  = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
   return `${dt.getFullYear()}-${mm}-${dd}`;
 };
 const hitungUsia = (tgl) => {
   if (!tgl) return "-";
-  const diff  = Date.now() - new Date(tgl).getTime();
+  const diff = Date.now() - new Date(tgl).getTime();
   const bulan = Math.floor(diff / (1000 * 60 * 60 * 24 * 30.44));
   if (bulan < 12) return `${bulan} bln`;
   return `${Math.floor(bulan / 12)} th ${bulan % 12} bln`;
@@ -145,9 +147,9 @@ const hitungUsia = (tgl) => {
 function DetailModal({ data, onClose }) {
   if (!data) return null;
 
-  const balita    = data.balita;
+  const balita = data.balita;
   const usiaBulan = hitungUsiaBulan(balita?.tglLahir, data.tanggal);
-  const stunting  = data.tb && usiaBulan !== null
+  const stunting = data.tb && usiaBulan !== null
     ? hitungStatusStunting(parseFloat(data.tb), usiaBulan, balita?.jenisKelamin)
     : null;
 
@@ -255,8 +257,8 @@ function DetailModal({ data, onClose }) {
             <p style={{ fontSize: 11, fontWeight: 700, color: "#9aab9a", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Hasil Pengukuran</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { label: "Berat Badan",    value: data.bb   ? `${data.bb} kg`  : "-", accent: true },
-                { label: "Tinggi Badan",   value: data.tb   ? `${data.tb} cm`  : "-", accent: true },
+                { label: "Berat Badan", value: data.bb ? `${data.bb} kg` : "-", accent: true },
+                { label: "Tinggi Badan", value: data.tb ? `${data.tb} cm` : "-", accent: true },
                 { label: "Lingkar Kepala", value: data.lingkarKepala ? `${data.lingkarKepala} cm` : "-" },
               ].map(({ label, value, accent }) => (
                 <div key={label} style={{ background: accent ? "#e8f5ed" : "#f8fbf9", border: `1px solid ${accent ? "#b8ddc5" : "#f0f6f2"}`, borderRadius: 10, padding: "10px 12px" }}>
@@ -281,7 +283,7 @@ function DetailModal({ data, onClose }) {
             </div>
           )}
 
-          
+
 
         </div>
 
@@ -300,27 +302,27 @@ function DetailModal({ data, onClose }) {
 ══════════════════════════════════════════ */
 function BalitaFormModal({ onClose, onSubmit, editData }) {
   const isEdit = !!editData;
-  const [form, setForm]         = useState(isEdit ? { ...editData, tglLahir: toInputDate(editData.tglLahir), jenisKelamin: editData.jenisKelamin ?? "" } : INIT_FORM);
-  const [errors, setErrors]     = useState({});
-  const [loading, setLoading]   = useState(false);
+  const [form, setForm] = useState(isEdit ? { ...editData, tglLahir: toInputDate(editData.tglLahir), jenisKelamin: editData.jenisKelamin ?? "" } : INIT_FORM);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm(p => ({ ...p, [name]: value }));
     if (errors[name]) setErrors(p => ({ ...p, [name]: "" }));
-    if (apiError)     setApiError("");
+    if (apiError) setApiError("");
   }
 
   function validate() {
     const e = {};
-    if (!form.nik.trim())                   e.nik          = "NIK wajib diisi";
-    else if (form.nik.trim().length !== 16) e.nik          = "NIK harus 16 digit";
-    if (!form.nama.trim())                  e.nama         = "Nama balita wajib diisi";
-    if (!form.namaIbu.trim())               e.namaIbu      = "Nama ibu wajib diisi";
-    if (!form.alamat.trim())                e.alamat       = "Alamat wajib diisi";
-    if (!form.tglLahir)                     e.tglLahir     = "Tanggal lahir wajib diisi";
-    if (!form.jenisKelamin)                 e.jenisKelamin = "Jenis kelamin wajib dipilih";
+    if (!form.nik.trim()) e.nik = "NIK wajib diisi";
+    else if (form.nik.trim().length !== 16) e.nik = "NIK harus 16 digit";
+    if (!form.nama.trim()) e.nama = "Nama balita wajib diisi";
+    if (!form.namaIbu.trim()) e.namaIbu = "Nama ibu wajib diisi";
+    if (!form.alamat.trim()) e.alamat = "Alamat wajib diisi";
+    if (!form.tglLahir) e.tglLahir = "Tanggal lahir wajib diisi";
+    if (!form.jenisKelamin) e.jenisKelamin = "Jenis kelamin wajib dipilih";
     return e;
   }
 
@@ -335,12 +337,12 @@ function BalitaFormModal({ onClose, onSubmit, editData }) {
   }
 
   const fields = [
-    { name: "nik",      label: "NIK",           type: "text",     icon: CreditCard, placeholder: "16 digit NIK balita",      span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true  },
-    { name: "nama",     label: "Nama Balita",    type: "text",     icon: Baby,       placeholder: "Nama lengkap balita",       span: 1, required: true  },
-    { name: "namaIbu",  label: "Nama Ibu",       type: "text",     icon: User,       placeholder: "Nama lengkap ibu",          span: 1, required: true  },
-    { name: "noTelp",   label: "No. Telepon",    type: "text",     icon: Phone,      placeholder: "08xx-xxxx-xxxx (opsional)", span: 1, required: false },
-    { name: "tglLahir", label: "Tanggal Lahir",  type: "date",     icon: Calendar,   placeholder: "",                          span: 1, required: true  },
-    { name: "alamat",   label: "Alamat Lengkap", type: "textarea", icon: MapPin,     placeholder: "RT/RW, Dusun, Desa…",      span: 2, required: true  },
+    { name: "nik", label: "NIK", type: "text", icon: CreditCard, placeholder: "16 digit NIK balita", span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true },
+    { name: "nama", label: "Nama Balita", type: "text", icon: Baby, placeholder: "Nama lengkap balita", span: 1, required: true },
+    { name: "namaIbu", label: "Nama Ibu", type: "text", icon: User, placeholder: "Nama lengkap ibu", span: 1, required: true },
+    { name: "noTelp", label: "No. Telepon", type: "text", icon: Phone, placeholder: "08xx-xxxx-xxxx (opsional)", span: 1, required: false },
+    { name: "tglLahir", label: "Tanggal Lahir", type: "date", icon: Calendar, placeholder: "", span: 1, required: true },
+    { name: "alamat", label: "Alamat Lengkap", type: "textarea", icon: MapPin, placeholder: "RT/RW, Dusun, Desa…", span: 2, required: true },
   ];
 
   return (
@@ -471,19 +473,32 @@ function DeleteConfirmModal({ balita, onClose, onConfirm, loading }) {
 /* ══════════════════════════════════════════
    MODAL FORM PEMERIKSAAN
 ══════════════════════════════════════════ */
-function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
-  const [pemForm, setPemForm]       = useState(PEMERIKSAAN_INIT);
-  const [pemErr, setPemErr]         = useState({});
+function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving, editData }) {
+  const isEdit = !!editData;
+  const [pemForm, setPemForm] = useState(
+    isEdit
+      ? {
+          balitaId: editData.balitaId,
+          kegiatan: editData.kegiatan,
+          bb: editData.bb ?? "",
+          tb: editData.tb ?? "",
+          lingkarKepala: editData.lingkarKepala ?? "",
+          lingkarLengan: editData.lingkarLengan ?? "",
+        }
+      : PEMERIKSAAN_INIT
+  );
+
+  const [pemErr, setPemErr] = useState({});
   const [jadwalList, setJadwalList] = useState([]);
 
   useEffect(() => { getJadwalTerdekat().then(setJadwalList); }, []);
 
   // Preview stunting real-time
   const selectedBalita = balitaList.find(b => String(b.id) === String(pemForm.balitaId));
-  const jadwalDipilih  = jadwalList.find(j => j.kegiatan === pemForm.kegiatan);
-  const tanggalPem     = jadwalDipilih ? jadwalDipilih.tanggal : new Date().toISOString();
+  const jadwalDipilih = jadwalList.find(j => j.kegiatan === pemForm.kegiatan);
+  const tanggalPem = new Date().toISOString();
   const usiaBulanPreview = selectedBalita ? hitungUsiaBulan(selectedBalita.tglLahir, tanggalPem) : null;
-  const stuntingPreview  = (pemForm.tb && selectedBalita && usiaBulanPreview !== null)
+  const stuntingPreview = (pemForm.tb && selectedBalita && usiaBulanPreview !== null)
     ? hitungStatusStunting(parseFloat(pemForm.tb), usiaBulanPreview, selectedBalita.jenisKelamin)
     : null;
 
@@ -497,8 +512,8 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
     const e = {};
     if (!pemForm.balitaId) e.balitaId = "Pilih balita";
     if (!pemForm.kegiatan) e.kegiatan = "Pilih kegiatan";
-    if (!pemForm.bb)       e.bb       = "Berat badan wajib diisi";
-    if (!pemForm.tb)       e.tb       = "Tinggi badan wajib diisi";
+    if (!pemForm.bb) e.bb = "Berat badan wajib diisi";
+    if (!pemForm.tb) e.tb = "Tinggi badan wajib diisi";
     return e;
   }
 
@@ -506,7 +521,7 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
     ev.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setPemErr(errs); return; }
-    onSubmit({ ...pemForm, tanggal: jadwalDipilih ? new Date(jadwalDipilih.tanggal).toISOString().split("T")[0] : new Date().toISOString().split("T")[0] });
+    onSubmit({ ...pemForm, tanggal: new Date().toISOString().split("T")[0] });
   }
 
   return (
@@ -576,7 +591,7 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
 
 
 
-            
+
           </div>
 
           {/* Preview Status Stunting */}
@@ -610,31 +625,65 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving }) {
 export default function PosyanduPage() {
   const [tab, setTab] = useState("data");
 
-  const [balitaList, setBalitaList]       = useState([]);
+  const [balitaList, setBalitaList] = useState([]);
   const [loadingBalita, setLoadingBalita] = useState(true);
-  const [showModal, setShowModal]         = useState(false);
-  const [editData, setEditData]           = useState(null);
-  const [deleteTarget, setDeleteTarget]   = useState(null);
-  const [deleting, setDeleting]           = useState(false);
-  const [searchBalita, setSearchBalita]   = useState("");
-  const [sortField, setSortField]         = useState("nama");
-  const [sortAsc, setSortAsc]             = useState(true);
-  const [toast, setToast]                 = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [searchBalita, setSearchBalita] = useState("");
+  const [sortField, setSortField] = useState("nama");
+  const [sortAsc, setSortAsc] = useState(true);
+  const [toast, setToast] = useState(null);
 
   const [showPemForm, setShowPemForm] = useState(false);
-  const [savingPem, setSavingPem]     = useState(false);
-  const [searchPem, setSearchPem]     = useState("");
-  const [pemHistory, setPemHistory]   = useState([]);
-  const [loadingPem, setLoadingPem]   = useState(true);
-  const [detailData, setDetailData]   = useState(null); 
- 
-  useEffect(() => {loadBalita(); }, []);
-  useEffect(() => { 
-    
-    if (tab === "pemeriksaan") loadPemeriksaan(); }, [tab]);
+  const [savingPem, setSavingPem] = useState(false);
+  const [searchPem, setSearchPem] = useState("");
+  const [pemHistory, setPemHistory] = useState([]);
+  const [loadingPem, setLoadingPem] = useState(true);
+  const [detailData, setDetailData] = useState(null);
+
+  const [editPemData, setEditPemData] = useState(null);
+  const [deletePemTarget, setDeletePemTarget] = useState(null);
+  const [deletingPem, setDeletingPem] = useState(false);
+
+  useEffect(() => { loadBalita(); }, []);
+  useEffect(() => {
+
+    if (tab === "pemeriksaan") loadPemeriksaan();
+  }, [tab]);
 
 
+  async function handlePemUpdate(pemForm) {
+    setSavingPem(true);
+    try {
+      await updatePosyanduBalita(editPemData.id, {
+        ...pemForm,
+        tanggal: new Date().toISOString().split("T")[0],
+      });
+      await loadPemeriksaan();
+      setEditPemData(null);
+      showToast("Pemeriksaan berhasil diperbarui");
+    } catch {
+      showToast("Gagal memperbarui pemeriksaan", "error");
+    } finally {
+      setSavingPem(false);
+    }
+  }
 
+  async function handlePemDelete() {
+    setDeletingPem(true);
+    try {
+      await deletePosyanduBalita(deletePemTarget.id);
+      await loadPemeriksaan();
+      setDeletePemTarget(null);
+      showToast("Pemeriksaan berhasil dihapus");
+    } catch {
+      showToast("Gagal menghapus pemeriksaan", "error");
+    } finally {
+      setDeletingPem(false);
+    }
+  }
   async function loadBalita() {
     setLoadingBalita(true);
     try { const data = await getBalita(); setBalitaList(data); }
@@ -654,7 +703,7 @@ export default function PosyanduPage() {
     setTimeout(() => setToast(null), 3000);
   }
 
-    async function handleCreate(formData) {
+  async function handleCreate(formData) {
     try {
       await createBalita(formData);
       await loadBalita();
@@ -701,29 +750,29 @@ export default function PosyanduPage() {
   const totalBalita = balitaList.length;
 
   // ✅ Hitung stunting nyata dari data pemeriksaan terakhir tiap balita
- const stuntingCount = balitaList.filter(b => {
-  const pemB = pemHistory
-    .filter(p => p.balitaId === b.id)
-    .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
-  if (!pemB.length) return false;
-  const last = pemB[0];
-  const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
-  if (usia === null || usia === undefined || !last.tb) return false;
-  const s = hitungStatusStunting(parseFloat(last.tb), usia, b.jenisKelamin);
-  return s && s.status === "stunting";  // ✅ hanya stunting, bukan severely
-}).length;
+  const stuntingCount = balitaList.filter(b => {
+    const pemB = pemHistory
+      .filter(p => p.balitaId === b.id)
+      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
+    if (!pemB.length) return false;
+    const last = pemB[0];
+    const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
+    if (usia === null || usia === undefined || !last.tb) return false;
+    const s = hitungStatusStunting(parseFloat(last.tb), usia, b.jenisKelamin);
+    return s && s.status === "stunting";  // ✅ hanya stunting, bukan severely
+  }).length;
 
-const severelyStuntingCount = balitaList.filter(b => {
-  const pemB = pemHistory
-    .filter(p => p.balitaId === b.id)
-    .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
-  if (!pemB.length) return false;
-  const last = pemB[0];
-  const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
-  if (usia === null || usia === undefined || !last.tb) return false;
-  const s = hitungStatusStunting(parseFloat(last.tb), usia, b.jenisKelamin);
-  return s && s.status === "severely_stunting";
-}).length;
+  const severelyStuntingCount = balitaList.filter(b => {
+    const pemB = pemHistory
+      .filter(p => p.balitaId === b.id)
+      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
+    if (!pemB.length) return false;
+    const last = pemB[0];
+    const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
+    if (usia === null || usia === undefined || !last.tb) return false;
+    const s = hitungStatusStunting(parseFloat(last.tb), usia, b.jenisKelamin);
+    return s && s.status === "severely_stunting";
+  }).length;
 
 
   const bulanIni = balitaList.filter(b => {
@@ -797,7 +846,7 @@ const severelyStuntingCount = balitaList.filter(b => {
       {/* TAB BAR */}
       <div style={{ display: "flex", gap: 6, background: "#fff", border: "1px solid #e4ede6", borderRadius: 14, padding: 5, width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {[
-          { id: "data",        label: "Data Balita",       icon: Baby  },
+          { id: "data", label: "Data Balita", icon: Baby },
           { id: "pemeriksaan", label: "Input Pemeriksaan", icon: Scale },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)} style={{
@@ -816,23 +865,23 @@ const severelyStuntingCount = balitaList.filter(b => {
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
-          {[
-            { icon: Baby,          label: "Total Balita",        value: loadingBalita ? "–" : totalBalita,           sub: "Terdaftar aktif",             accent: "#2d7a4f", bg: "#e8f5ed" },
-            { icon: AlertTriangle, label: "Stunting",             value: (loadingBalita || loadingPem) ? "–" : stuntingCount,        sub: "Terdeteksi pemeriksaan",      accent: "#d97706", bg: "#fef3c7" },
-            { icon: TrendingDown,  label: "Severely Stunting",   value: (loadingBalita || loadingPem) ? "–" : severelyStuntingCount, sub: "Perlu penanganan segera",     accent: "#dc2626", bg: "#fee2e2" },
-            { icon: Calendar,      label: "Baru Bulan Ini",      value: loadingBalita ? "–" : bulanIni,              sub: "Balita terdaftar baru",        accent: "#be185d", bg: "#fce7f3" },
-          ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
-            <div key={label} className="stat-card">
-              <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent, borderRadius: "14px 0 0 14px" }} />
-              <div style={{ background: bg, borderRadius: 10, padding: 9 }}><Icon size={18} color={accent} /></div>
-              <div>
-                <p style={{ color: "#9aab9a", fontSize: 12 }}>{label}</p>
-                <p style={{ fontSize: 26, fontWeight: 800, color: "#1f2d1f", letterSpacing: -0.5 }}>{value}</p>
-                <p style={{ color: "#b5ceba", fontSize: 11, marginTop: 2 }}>{sub}</p>
+            {[
+              { icon: Baby, label: "Total Balita", value: loadingBalita ? "–" : totalBalita, sub: "Terdaftar aktif", accent: "#2d7a4f", bg: "#e8f5ed" },
+              { icon: AlertTriangle, label: "Stunting", value: (loadingBalita || loadingPem) ? "–" : stuntingCount, sub: "Terdeteksi pemeriksaan", accent: "#d97706", bg: "#fef3c7" },
+              { icon: TrendingDown, label: "Severely Stunting", value: (loadingBalita || loadingPem) ? "–" : severelyStuntingCount, sub: "Perlu penanganan segera", accent: "#dc2626", bg: "#fee2e2" },
+              { icon: Calendar, label: "Baru Bulan Ini", value: loadingBalita ? "–" : bulanIni, sub: "Balita terdaftar baru", accent: "#be185d", bg: "#fce7f3" },
+            ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
+              <div key={label} className="stat-card">
+                <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent, borderRadius: "14px 0 0 14px" }} />
+                <div style={{ background: bg, borderRadius: 10, padding: 9 }}><Icon size={18} color={accent} /></div>
+                <div>
+                  <p style={{ color: "#9aab9a", fontSize: 12 }}>{label}</p>
+                  <p style={{ fontSize: 26, fontWeight: 800, color: "#1f2d1f", letterSpacing: -0.5 }}>{value}</p>
+                  <p style={{ color: "#b5ceba", fontSize: 11, marginTop: 2 }}>{sub}</p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
           <div style={{ background: "#fff", border: "1px solid #e4ede6", borderRadius: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.04)", overflow: "hidden" }}>
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -910,7 +959,7 @@ const severelyStuntingCount = balitaList.filter(b => {
                       <td style={{ padding: "12px 14px" }}>
                         {balita.jenisKelamin === "Laki-laki" ? <span className="badge-laki">♂ Laki-laki</span>
                           : balita.jenisKelamin === "Perempuan" ? <span className="badge-perempuan">♀ Perempuan</span>
-                          : <span className="badge-null">-</span>}
+                            : <span className="badge-null">-</span>}
                       </td>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
@@ -957,7 +1006,7 @@ const severelyStuntingCount = balitaList.filter(b => {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
-                    {["No","Kegiatan","Nama Balita","Tgl Pemeriksaan","BB (kg)","TB (cm)","Lk. Kepala","Status","Detail"].map(h => (
+                    {["No", "Kegiatan", "Nama Balita", "Tgl Pemeriksaan", "BB (kg)", "TB (cm)", "Lk. Kepala", "Status", "Aksi"].map(h => (
                       <th key={h} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", fontSize: 12, fontWeight: 700, color: "#9aab9a", whiteSpace: "nowrap" }}>{h}</th>
                     ))}
                   </tr>
@@ -975,9 +1024,9 @@ const severelyStuntingCount = balitaList.filter(b => {
                     <tr><td colSpan={10} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
                   )}
                   {!loadingPem && filteredPem.map((p, i) => {
-                    const balita     = p.balita;
-                    const usiaBulan  = hitungUsiaBulan(balita?.tglLahir, p.tanggal);
-                    const stunting   = (p.tb && usiaBulan !== null)
+                    const balita = p.balita;
+                    const usiaBulan = hitungUsiaBulan(balita?.tglLahir, p.tanggal);
+                    const stunting = (p.tb && usiaBulan !== null)
                       ? hitungStatusStunting(parseFloat(p.tb), usiaBulan, balita?.jenisKelamin)
                       : null;
 
@@ -990,23 +1039,32 @@ const severelyStuntingCount = balitaList.filter(b => {
                         <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
                         <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                        
+
                         {/* ── Kolom Status Stunting WHO ── */}
                         <td style={{ padding: "12px 14px" }}>
                           {stunting
                             ? stunting.status === "severely_stunting"
                               ? <span className="badge-severely">🔴 Severely Stunting</span>
                               : stunting.status === "stunting"
-                              ? <span className="badge-stunting">🟡 Stunting</span>
-                              : <span className="badge-normal">🟢 Normal</span>
+                                ? <span className="badge-stunting">🟡 Stunting</span>
+                                : <span className="badge-normal">🟢 Normal</span>
                             : <span className="badge-nodata">-</span>
                           }
                         </td>
                         {/* ── Kolom Detail ── */}
+                       
                         <td style={{ padding: "12px 14px" }}>
-                          <button className="btn-detail" onClick={() => setDetailData(p)}>
-                            <Info size={12} /> Detail
-                          </button>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button className="btn-detail" onClick={() => setDetailData(p)}>
+                              <Info size={12} /> Detail
+                            </button>
+                            <button className="btn-edit" onClick={() => setEditPemData(p)}>
+                              <Pencil size={12} /> Edit
+                            </button>
+                            <button className="btn-hapus" onClick={() => setDeletePemTarget(p)}>
+                              <Trash2 size={12} /> Hapus
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1047,6 +1105,24 @@ const severelyStuntingCount = balitaList.filter(b => {
         <DetailModal
           data={detailData}
           onClose={() => setDetailData(null)}
+        />
+      )}
+      {editPemData && (
+        <PemeriksaanFormModal
+          balitaList={balitaList}
+          saving={savingPem}
+          editData={editPemData}
+          onClose={() => setEditPemData(null)}
+          onSubmit={handlePemUpdate}
+        />
+      )}
+
+      {deletePemTarget && (
+        <DeleteConfirmModal
+          balita={{ nama: deletePemTarget.balita?.nama }}
+          loading={deletingPem}
+          onClose={() => setDeletePemTarget(null)}
+          onConfirm={handlePemDelete}
         />
       )}
     </div>
