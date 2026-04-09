@@ -38,6 +38,8 @@ export async function login(data) {
 
   cookieStore.set('token', token, {
     httpOnly: true,
+    secure: true,     // 🔥 WAJIB di production
+    sameSite: 'lax',  // 🔥 penting
     path: '/',
   })
 

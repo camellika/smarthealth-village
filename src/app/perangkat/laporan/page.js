@@ -71,14 +71,7 @@ function hitungStatusStunting(tb, usiaBulan, jenisKelamin) {
   return               { zScore: zScore.toFixed(2), label: "Normal",            color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
 }
 
-function getStatusBB(bb, tglLahir) {
-  if (!bb || !tglLahir) return null;
-  const bulan  = Math.floor((Date.now() - new Date(tglLahir).getTime()) / (1000 * 60 * 60 * 24 * 30.44));
-  const median = bulan <= 12 ? 9 : bulan <= 24 ? 12 : bulan <= 36 ? 14 : bulan <= 48 ? 16 : 18;
-  if (bb < median * 0.8) return { label: "Gizi Buruk", color: "#dc2626", bg: "#fee2e2", border: "#fecaca" };
-  if (bb < median * 0.9) return { label: "BB Kurang",  color: "#d97706", bg: "#fef3c7", border: "#fde68a" };
-  return                        { label: "Normal",      color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" };
-}
+
 
 const hitungUsiaBulanPadaTanggal = (tglLahir, tglPeriksa) => {
   if (!tglLahir || !tglPeriksa) return null;
@@ -322,7 +315,7 @@ export default function LaporanPage() {
     const getHeaders = () => {
       if (kategori === "balita-data")     return ["No","NIK","Nama Balita","Nama Ibu","Tgl Lahir","Usia","No Telp","Alamat"];
       if (kategori === "lansia-data")     return ["No","NIK","Nama Lansia","Tgl Lahir","Usia","No Telp","Alamat"];
-      if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala","Lk. Lengan","Status Gizi","Status Stunting"];
+      if (kategori === "balita-posyandu") return ["No","Nama Balita","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Kepala","Status Stunting"];
       if (kategori === "lansia-posyandu") return ["No","Nama Lansia","Kegiatan","Tanggal","BB (kg)","TB (cm)","Lk. Perut","Tensi (mmHg)","Status Tensi","Gula Darah (mg/dL)","Status Gula"];
       return [];
     };
@@ -335,10 +328,9 @@ export default function LaporanPage() {
         cells = [i+1, item.nik??"-", item.nama??"-", formatDate(item.tglLahir), hitungUsia(item.tglLahir), item.noTelp??"-", item.alamat??"-"];
       } else if (kategori === "balita-posyandu") {
         const usiaBulan = hitungUsiaBulanPadaTanggal(item.balita?.tglLahir, item.tanggal);
-        const gizi      = getStatusBB(item.bb, item.balita?.tglLahir);
         const stunting  = hitungStatusStunting(item.tb, usiaBulan, item.balita?.jenisKelamin);
-        cells = [i+1, item.balita?.nama??"-", item.kegiatan??"-", formatDate(item.tanggal), item.bb??"-", item.tb??"-", item.lingkarKepala??"-", item.lingkarLengan??"-",
-          gizi?.label ?? "-",
+        cells = [i+1, item.balita?.nama??"-", item.kegiatan??"-", formatDate(item.tanggal), item.bb??"-", item.tb??"-", item.lingkarKepala??"-",
+          
           stunting ? `${stunting.label} (Z:${stunting.zScore})` : "-",
         ];
       } else if (kategori === "lansia-posyandu") {
@@ -697,8 +689,6 @@ export default function LaporanPage() {
                                     { label: "BB (kg)",         field: "bb"            },
                                     { label: "TB (cm)",         field: "tb"            },
                                     { label: "Lk. Kepala (cm)", field: "lingkarKepala" },
-                                    { label: "Lk. Lengan (cm)", field: "lingkarLengan" },
-                                    { label: "Status Gizi",     field: null            },
                                     { label: "Status Stunting", field: null            },
                                   ].map(({ label, field }) => (
                                     <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
@@ -737,7 +727,6 @@ export default function LaporanPage() {
                                 {/* ── Row Balita Posyandu ── */}
                                 {kategoriPos === "balita" && pagedPos.map((p, i) => {
                                   const usiaBulan = hitungUsiaBulanPadaTanggal(p.balita?.tglLahir, p.tanggal);
-                                  const giziCfg   = getStatusBB(p.bb, p.balita?.tglLahir);
                                   const stunting  = hitungStatusStunting(p.tb, usiaBulan, p.balita?.jenisKelamin);
                                   return (
                                     <tr key={p.id} className="tr-row">
@@ -748,12 +737,7 @@ export default function LaporanPage() {
                                       <td style={{ padding: "12px 14px", fontWeight: 700, color: "#1f2d1f" }}>{p.bb ?? "-"}</td>
                                       <td style={{ padding: "12px 14px", color: "#1f2d1f" }}>{p.tb ?? "-"}</td>
                                       <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarKepala ?? "-"}</td>
-                                      <td style={{ padding: "12px 14px", color: "#6b7c6b" }}>{p.lingkarLengan ?? "-"}</td>
 
-                                      {/* Status Gizi */}
-                                      <td style={{ padding: "10px 14px" }}>
-                                        <StatusBadge cfg={giziCfg} />
-                                      </td>
 
                                       {/* Status Stunting */}
                                       <td style={{ padding: "10px 14px" }}>
