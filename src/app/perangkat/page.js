@@ -339,13 +339,13 @@ export default function DashboardPage() {
               <p style={{ fontSize:12, color:"#9aab9a", margin:0 }}>Ringkasan data kesehatan balita</p>
             </div>
           </div>
-          <Link href="/admin/balita" style={{
+          {/* <Link href="/admin/balita" style={{
             display:"flex", alignItems:"center", gap:5, color:"#2d7a4f", fontSize:13,
             fontWeight:600, textDecoration:"none", background:"#e8f5ed",
             padding:"7px 13px", borderRadius:9, border:"1px solid #c6e2d1",
           }}>
-            Kelola Data <ArrowRight size={13} />
-          </Link>
+          
+          </Link> */}
         </div>
 
         {/* Stat cards balita — sesuai tampilan gambar */}
@@ -511,13 +511,13 @@ export default function DashboardPage() {
               <p style={{ fontSize:12, color:"#9aab9a", margin:0 }}>Ringkasan data kesehatan lansia</p>
             </div>
           </div>
-          <Link href="/admin/lansia" style={{
+          {/* <Link href="/admin/lansia" style={{
             display:"flex", alignItems:"center", gap:5, color:"#2563ab", fontSize:13,
             fontWeight:600, textDecoration:"none", background:"#eaf3fb",
             padding:"7px 13px", borderRadius:9, border:"1px solid #bfdbfe",
           }}>
-            Kelola Data <ArrowRight size={13} />
-          </Link>
+           
+          </Link> */}
         </div>
 
         {/* Stat cards lansia */}
