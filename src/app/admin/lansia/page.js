@@ -469,13 +469,11 @@ function DeleteConfirmModal({ lansia, onClose, onConfirm, loading }) {
    MODAL FORM PEMERIKSAAN LANSIA
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving }) {
-  const isEdit = !!editData;
-  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: new Date().toISOString().split("T")[0] } : INIT_FORM_PEM);
+const isEdit = !!editData;
+  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: toInputDate(editData.tanggal) } : { ...INIT_FORM_PEM, tanggal: new Date().toISOString().split("T")[0] });
   const [pemErr, setPemErr]               = useState({});
   const [jadwalList, setJadwalList]       = useState([]);
-  const [loadingJadwal, setLoadingJadwal] = useState(true);
-
-  useEffect(() => {
+  const [loadingJadwal, setLoadingJadwal] = useState(true);  useEffect(() => {
     getJadwalTerdekat().then(setJadwalList).finally(() => setLoadingJadwal(false));
   }, []);
 
