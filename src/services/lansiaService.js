@@ -17,6 +17,21 @@ export async function getLansiaById(id) {
   });
 }
 
+export async function getLansiaCount() {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  
+  return await prisma.lansia.count({
+    where: {
+      createdAt: {
+        gte: startOfMonth,
+        lte: endOfMonth,
+      }
+    }
+  });
+}
+
 export async function createLansia(data) {
   // Debug: cek semua field yang masuk
   console.log("=== createLansia data masuk ===", JSON.stringify(data));

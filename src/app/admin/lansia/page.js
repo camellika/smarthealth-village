@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getLansia, createLansia, updateLansia, deleteLansia } from "@/services/lansiaService";
+import { getLansia, createLansia, updateLansia, getLansiaCount, deleteLansia } from "@/services/lansiaService";
 import { getPosyanduLansia, createPosyanduLansia, updatePosyanduLansia, deletePosyanduLansia } from "@/services/posyanduLansiaService";
 import { getJadwalTerdekat } from "@/services/penjadwalanService";
 import {
@@ -11,6 +11,7 @@ import {
   Phone, MapPin, Save, Pencil, Trash2, Scale, Ruler,
   Activity, Droplets, Heart, Info, CheckCircle, AlertCircle
 } from "lucide-react";
+
 
 /* ══════════════════════════════════════════
    HELPERS
@@ -668,6 +669,8 @@ export default function PosyanduLansiaPage() {
   const [deletingPem, setDeletingPem]         = useState(false);
   const [searchPem, setSearchPem]             = useState("");
   const [detailData, setDetailData]           = useState(null);
+  const [bulanIni, setBulanIni] = useState(0);
+
 
   useEffect(() => { loadAll(); }, []);
 
@@ -675,9 +678,10 @@ export default function PosyanduLansiaPage() {
     setLoadingLansia(true);
     setLoadingPem(true);
     try {
-      const [l, p] = await Promise.all([getLansia(), getPosyanduLansia()]);
+      const [l, p, count] = await Promise.all([getLansia(), getPosyanduLansia(), getLansiaCount(),]);
       setLansiaList(l);
       setPemList(p);
+      setBulanIni(count);
     } catch {
       showToast("Gagal memuat data", "error");
     } finally {
@@ -790,12 +794,12 @@ export default function PosyanduLansiaPage() {
   //   return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
   // }).length;
 
-  const bulanIni = lansiaList.filter(l => {
-    console.log(l.nama, "createdAt:", l.createdAt); // ← cek apakah ada nilainya
-    const d = new Date(l.createdAt);
-    return d.getMonth() === new Date().getMonth() && 
-          d.getFullYear() === new Date().getFullYear();
-  }).length;
+  // const bulanIni = lansiaList.filter(l => {
+  //   console.log(l.nama, "createdAt:", l.createdAt); // ← cek apakah ada nilainya
+  //   const d = new Date(l.createdAt);
+  //   return d.getMonth() === new Date().getMonth() && 
+  //         d.getFullYear() === new Date().getFullYear();
+  // }).length;
 
 
   const filteredPem = pemList.filter(p =>
