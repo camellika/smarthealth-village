@@ -758,23 +758,22 @@ export default function PosyanduPage() {
 
   const totalBalita = balitaList.length;
 
-  // ✅ Hitung stunting nyata dari data pemeriksaan terakhir tiap balita
   const stuntingCount = balitaList.filter(b => {
     const pemB = pemHistory
-      .filter(p => p.balitaId === b.id)
-      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
+      .filter(p => String(p.balitaId) === String(b.id)) // ← paksa string
+      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
     if (!pemB.length) return false;
     const last = pemB[0];
     const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
     if (usia === null || usia === undefined || !last.tb) return false;
     const s = hitungStatusStunting(parseFloat(last.tb), usia, b.jenisKelamin);
-    return s && s.status === "stunting";  // ✅ hanya stunting, bukan severely
+    return s && s.status === "stunting";
   }).length;
 
   const severelyStuntingCount = balitaList.filter(b => {
     const pemB = pemHistory
-      .filter(p => p.balitaId === b.id)
-      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal)); // ✅ sort terbaru dulu
+      .filter(p => String(p.balitaId) === String(b.id)) // ← paksa string
+      .sort((a, c) => new Date(c.tanggal) - new Date(a.tanggal));
     if (!pemB.length) return false;
     const last = pemB[0];
     const usia = hitungUsiaBulan(b.tglLahir, last.tanggal);
