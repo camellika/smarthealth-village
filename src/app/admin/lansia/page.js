@@ -17,7 +17,7 @@ import {
    HELPERS
 ══════════════════════════════════════════ */
 const INIT_FORM_LANSIA = { nik: "", nama: "", alamat: "", noTelp: "", tglLahir: "", jenisKelamin: "" };
-const INIT_FORM_PEM    = { lansiaId: "", kegiatan: "", tanggal: "", bb: "", tb: "", lingkarPerut: "", tensi: "", gulaDarah: "" };
+const INIT_FORM_PEM = { lansiaId: "", kegiatan: "", tanggal: "", bb: "", tb: "", lingkarPerut: "", tensi: "", gulaDarah: "" };
 
 const formatDate = (d) => {
   if (!d) return "-";
@@ -30,13 +30,13 @@ const formatDisplay = (d) => {
 const toInputDate = (d) => {
   if (!d) return "";
   const dt = new Date(d);
-  const mm  = String(dt.getMonth() + 1).padStart(2, "0");
-  const dd  = String(dt.getDate()).padStart(2, "0");
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
   return `${dt.getFullYear()}-${mm}-${dd}`;
 };
 const hitungUsia = (tgl) => {
   if (!tgl) return "-";
-  const diff  = Date.now() - new Date(tgl).getTime();
+  const diff = Date.now() - new Date(tgl).getTime();
   const tahun = Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
   return `${tahun} th`;
 };
@@ -44,19 +44,19 @@ const hitungUsia = (tgl) => {
 /* ── Status Tensi ── */
 function getStatusTensi(tensi) {
   if (!tensi) return null;
-  if (tensi >= 160) return { status: "tinggi2",  label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
-  if (tensi >= 140) return { status: "tinggi1",  label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
-  if (tensi >= 120) return { status: "prehiper", label: "Pra-Hipertensi",   color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
-  if (tensi < 90)   return { status: "rendah",   label: "Tensi Rendah",     color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
-  return               { status: "normal",   label: "Normal",           color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
+  if (tensi >= 160) return { status: "tinggi2", label: "Hipertensi Tk. 2", color: "#7c2d12", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 140) return { status: "tinggi1", label: "Hipertensi Tk. 1", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (tensi >= 120) return { status: "prehiper", label: "Pra-Hipertensi", color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  if (tensi < 90) return { status: "rendah", label: "Tensi Rendah", color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
+  return { status: "normal", label: "Normal", color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
 }
 
 /* ── Status Gula Darah ── */
 function getStatusGula(gula) {
   if (!gula) return null;
-  if (gula >= 200) return { label: "Diabetes",     color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
+  if (gula >= 200) return { label: "Diabetes", color: "#dc2626", bg: "#fee2e2", border: "#fecaca", icon: "🔴" };
   if (gula >= 100) return { label: "Pra-Diabetes", color: "#d97706", bg: "#fef3c7", border: "#fde68a", icon: "🟡" };
-  return              { label: "Normal",        color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
+  return { label: "Normal", color: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5", icon: "🟢" };
 }
 
 /* ══════════════════════════════════════════
@@ -65,8 +65,8 @@ function getStatusGula(gula) {
 function DetailModal({ data, onClose }) {
   if (!data) return null;
 
-  const tensiStatus = data.tensi     ? getStatusTensi(parseFloat(data.tensi))    : null;
-  const gulaStatus  = data.gulaDarah ? getStatusGula(parseFloat(data.gulaDarah)) : null;
+  const tensiStatus = data.tensi ? getStatusTensi(parseFloat(data.tensi)) : null;
+  const gulaStatus = data.gulaDarah ? getStatusGula(parseFloat(data.gulaDarah)) : null;
 
   const saranTensi = {
     normal: {
@@ -167,7 +167,7 @@ function DetailModal({ data, onClose }) {
   };
 
   const infoTensi = tensiStatus ? saranTensi[tensiStatus.status] : null;
-  const infoGula  = gulaStatus  ? saranGula[gulaStatus.label]    : null;
+  const infoGula = gulaStatus ? saranGula[gulaStatus.label] : null;
 
   return (
     <>
@@ -236,11 +236,11 @@ function DetailModal({ data, onClose }) {
             <p style={{ fontSize: 11, fontWeight: 700, color: "#9aab9a", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 10 }}>Hasil Pengukuran</p>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
               {[
-                { label: "Berat Badan",   value: data.bb           ? `${data.bb} kg`           : "-", accent: true,         c: "#2d7a4f",                       bg: "#e8f5ed",                      border: "#b8ddc5" },
-                { label: "Tinggi Badan",  value: data.tb           ? `${data.tb} cm`           : "-", accent: true,         c: "#0284c7",                       bg: "#e0f2fe",                      border: "#bae6fd" },
-                { label: "Lingkar Perut", value: data.lingkarPerut ? `${data.lingkarPerut} cm`  : "-", accent: false },
-                { label: "Tensi",         value: data.tensi        ? `${data.tensi} mmHg`      : "-", accent: !!data.tensi, c: tensiStatus?.color ?? "#dc2626", bg: tensiStatus?.bg ?? "#fee2e2",   border: (tensiStatus?.color ?? "#dc2626") + "40" },
-                { label: "Gula Darah",    value: data.gulaDarah    ? `${data.gulaDarah} mg/dL`  : "-", accent: !!data.gulaDarah, c: gulaStatus?.color ?? "#6b7c6b", bg: gulaStatus?.bg ?? "#f8fbf9", border: (gulaStatus?.color ?? "#9aab9a") + "40" },
+                { label: "Berat Badan", value: data.bb ? `${data.bb} kg` : "-", accent: true, c: "#2d7a4f", bg: "#e8f5ed", border: "#b8ddc5" },
+                { label: "Tinggi Badan", value: data.tb ? `${data.tb} cm` : "-", accent: true, c: "#0284c7", bg: "#e0f2fe", border: "#bae6fd" },
+                { label: "Lingkar Perut", value: data.lingkarPerut ? `${data.lingkarPerut} cm` : "-", accent: false },
+                { label: "Tensi", value: data.tensi ? `${data.tensi} mmHg` : "-", accent: !!data.tensi, c: tensiStatus?.color ?? "#dc2626", bg: tensiStatus?.bg ?? "#fee2e2", border: (tensiStatus?.color ?? "#dc2626") + "40" },
+                { label: "Gula Darah", value: data.gulaDarah ? `${data.gulaDarah} mg/dL` : "-", accent: !!data.gulaDarah, c: gulaStatus?.color ?? "#6b7c6b", bg: gulaStatus?.bg ?? "#f8fbf9", border: (gulaStatus?.color ?? "#9aab9a") + "40" },
               ].map(({ label, value, accent, c, bg, border }) => (
                 <div key={label} style={{ background: accent ? bg : "#f8fbf9", border: `1px solid ${accent ? border : "#f0f6f2"}`, borderRadius: 10, padding: "10px 12px" }}>
                   <p style={{ fontSize: 11, color: accent ? c : "#9aab9a", fontWeight: 600 }}>{label}</p>
@@ -299,25 +299,25 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
       ? { ...editData, tglLahir: toInputDate(editData.tglLahir), jenisKelamin: editData.jenisKelamin ?? "" }
       : INIT_FORM_LANSIA
   );
-  const [errors, setErrors]     = useState({});
-  const [loading, setLoading]   = useState(false);
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
   function handleChange(e) {
     const { name, value } = e.target;
     setForm(p => ({ ...p, [name]: value }));
     if (errors[name]) setErrors(p => ({ ...p, [name]: "" }));
-    if (apiError)     setApiError("");
+    if (apiError) setApiError("");
   }
 
   function validate() {
     const e = {};
-    if (!form.nik.trim())                   e.nik          = "NIK wajib diisi";
-    else if (form.nik.trim().length !== 16) e.nik          = "NIK harus 16 digit";
-    if (!form.nama.trim())                  e.nama         = "Nama lansia wajib diisi";
-    if (!form.alamat.trim())                e.alamat       = "Alamat wajib diisi";
-    if (!form.tglLahir)                     e.tglLahir     = "Tanggal lahir wajib diisi";
-    if (!form.jenisKelamin)                 e.jenisKelamin = "Jenis kelamin wajib dipilih";
+    if (!form.nik.trim()) e.nik = "NIK wajib diisi";
+    else if (form.nik.trim().length !== 16) e.nik = "NIK harus 16 digit";
+    if (!form.nama.trim()) e.nama = "Nama lansia wajib diisi";
+    if (!form.alamat.trim()) e.alamat = "Alamat wajib diisi";
+    if (!form.tglLahir) e.tglLahir = "Tanggal lahir wajib diisi";
+    if (!form.jenisKelamin) e.jenisKelamin = "Jenis kelamin wajib dipilih";
     return e;
   }
 
@@ -332,11 +332,11 @@ function LansiaFormModal({ onClose, onSubmit, editData }) {
   }
 
   const fields = [
-    { name: "nik",      label: "NIK",           type: "text",     icon: CreditCard, placeholder: "16 digit NIK lansia",      span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true  },
-    { name: "nama",     label: "Nama Lansia",    type: "text",     icon: Users,      placeholder: "Nama lengkap lansia",       span: 1, required: true  },
-    { name: "noTelp",   label: "No. Telepon",    type: "text",     icon: Phone,      placeholder: "08xx-xxxx-xxxx (opsional)", span: 1, required: false },
-    { name: "tglLahir", label: "Tanggal Lahir",  type: "date",     icon: Calendar,   placeholder: "",                          span: 1, required: true  },
-    { name: "alamat",   label: "Alamat Lengkap", type: "textarea", icon: MapPin,     placeholder: "RT/RW, Dusun, Desa…",      span: 2, required: true  },
+    { name: "nik", label: "NIK", type: "text", icon: CreditCard, placeholder: "16 digit NIK lansia", span: 2, hint: "Nomor Induk Kependudukan 16 digit", required: true },
+    { name: "nama", label: "Nama Lansia", type: "text", icon: Users, placeholder: "Nama lengkap lansia", span: 1, required: true },
+    { name: "noTelp", label: "No. Telepon", type: "text", icon: Phone, placeholder: "08xx-xxxx-xxxx (opsional)", span: 1, required: false },
+    { name: "tglLahir", label: "Tanggal Lahir", type: "date", icon: Calendar, placeholder: "", span: 1, required: true },
+    { name: "alamat", label: "Alamat Lengkap", type: "textarea", icon: MapPin, placeholder: "RT/RW, Dusun, Desa…", span: 2, required: true },
   ];
 
   return (
@@ -470,11 +470,11 @@ function DeleteConfirmModal({ lansia, onClose, onConfirm, loading }) {
    MODAL FORM PEMERIKSAAN LANSIA
 ══════════════════════════════════════════ */
 function PemeriksaanFormModal({ lansiaList, editData, onClose, onSubmit, saving }) {
-const isEdit = !!editData;
-  const [pemForm, setPemForm]             = useState(isEdit ? { ...editData, tanggal: toInputDate(editData.tanggal) } : { ...INIT_FORM_PEM, tanggal: new Date().toISOString().split("T")[0] });
-  const [pemErr, setPemErr]               = useState({});
-  const [jadwalList, setJadwalList]       = useState([]);
-  const [loadingJadwal, setLoadingJadwal] = useState(true);  useEffect(() => {
+  const isEdit = !!editData;
+  const [pemForm, setPemForm] = useState(isEdit ? { ...editData, tanggal: toInputDate(editData.tanggal) } : { ...INIT_FORM_PEM, tanggal: new Date().toISOString().split("T")[0] });
+  const [pemErr, setPemErr] = useState({});
+  const [jadwalList, setJadwalList] = useState([]);
+  const [loadingJadwal, setLoadingJadwal] = useState(true); useEffect(() => {
     getJadwalTerdekat().then(setJadwalList).finally(() => setLoadingJadwal(false));
   }, []);
 
@@ -493,9 +493,9 @@ const isEdit = !!editData;
 
   function validate() {
     const e = {};
-    if (!pemForm.lansiaId)        e.lansiaId = "Pilih lansia";
+    if (!pemForm.lansiaId) e.lansiaId = "Pilih lansia";
     if (!pemForm.kegiatan.trim()) e.kegiatan = "Pilih kegiatan";
-    if (!pemForm.tanggal)         e.tanggal  = "Tanggal wajib diisi";
+    if (!pemForm.tanggal) e.tanggal = "Tanggal wajib diisi";
     return e;
   }
 
@@ -649,26 +649,26 @@ const isEdit = !!editData;
 export default function PosyanduLansiaPage() {
   const [tab, setTab] = useState("data");
 
-  const [lansiaList, setLansiaList]       = useState([]);
+  const [lansiaList, setLansiaList] = useState([]);
   const [loadingLansia, setLoadingLansia] = useState(true);
-  const [showModal, setShowModal]         = useState(false);
-  const [editData, setEditData]           = useState(null);
-  const [deleteTarget, setDeleteTarget]   = useState(null);
-  const [deleting, setDeleting]           = useState(false);
-  const [searchLansia, setSearchLansia]   = useState("");
-  const [sortField, setSortField]         = useState("nama");
-  const [sortAsc, setSortAsc]             = useState(true);
-  const [toast, setToast]                 = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [searchLansia, setSearchLansia] = useState("");
+  const [sortField, setSortField] = useState("nama");
+  const [sortAsc, setSortAsc] = useState(true);
+  const [toast, setToast] = useState(null);
 
-  const [pemList, setPemList]                 = useState([]);
-  const [loadingPem, setLoadingPem]           = useState(true);
-  const [showPemForm, setShowPemForm]         = useState(false);
-  const [editPem, setEditPem]                 = useState(null);
-  const [savingPem, setSavingPem]             = useState(false);
+  const [pemList, setPemList] = useState([]);
+  const [loadingPem, setLoadingPem] = useState(true);
+  const [showPemForm, setShowPemForm] = useState(false);
+  const [editPem, setEditPem] = useState(null);
+  const [savingPem, setSavingPem] = useState(false);
   const [deletePemTarget, setDeletePemTarget] = useState(null);
-  const [deletingPem, setDeletingPem]         = useState(false);
-  const [searchPem, setSearchPem]             = useState("");
-  const [detailData, setDetailData]           = useState(null);
+  const [deletingPem, setDeletingPem] = useState(false);
+  const [searchPem, setSearchPem] = useState("");
+  const [detailData, setDetailData] = useState(null);
   const [bulanIni, setBulanIni] = useState(0);
 
 
@@ -678,9 +678,9 @@ export default function PosyanduLansiaPage() {
     setLoadingLansia(true);
     setLoadingPem(true);
     try {
-      const [l, p, count] = await Promise.all([getLansia(), 
-        getPosyanduLansia(),
-        getLansiaCount().catch(() => 0),]);
+      const [l, p, count] = await Promise.all([getLansia(),
+      getPosyanduLansia(),
+      getLansiaCount().catch(() => 0),]);
       setLansiaList(l);
       setPemList(p);
       setBulanIni(count);
@@ -714,7 +714,7 @@ export default function PosyanduLansiaPage() {
       }
     }
   }
-  async function handleUpdate(formData)  { await updateLansia(editData.id, formData); await loadAll(); setEditData(null); setShowModal(false); showToast("Data lansia berhasil diperbarui"); }
+  async function handleUpdate(formData) { await updateLansia(editData.id, formData); await loadAll(); setEditData(null); setShowModal(false); showToast("Data lansia berhasil diperbarui"); }
   async function handleDelete() {
     setDeleting(true);
     try { await deleteLansia(deleteTarget.id); await loadAll(); setDeleteTarget(null); showToast("Data lansia berhasil dihapus"); }
@@ -726,7 +726,7 @@ export default function PosyanduLansiaPage() {
     setSavingPem(true);
     try {
       if (editPem) { await updatePosyanduLansia(editPem.id, pemForm); showToast("Pemeriksaan berhasil diperbarui"); }
-      else         { await createPosyanduLansia(pemForm);              showToast("Pemeriksaan berhasil disimpan"); }
+      else { await createPosyanduLansia(pemForm); showToast("Pemeriksaan berhasil disimpan"); }
       await loadAll(); setShowPemForm(false); setEditPem(null);
     } catch { showToast("Gagal menyimpan pemeriksaan", "error"); }
     finally { setSavingPem(false); }
@@ -752,43 +752,25 @@ export default function PosyanduLansiaPage() {
     else { setSortField(field); setSortAsc(true); }
   }
 
-  const totalLansia  = lansiaList.length;
+  const totalLansia = lansiaList.length;
 
   function getPemeriksaanTerakhir(lansiaId, pemList) {
-  return pemList
-    .filter(p => String(p.lansiaId) === String(lansiaId)) // ← paksa keduanya string
-    .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
-}
-
-  const risikoTinggi = lansiaList.filter(l => {
+    return pemList
+      .filter(p => String(p.lansiaId) === String(lansiaId)) // ← paksa keduanya string
+      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
+  }
+  const risikoHipertensi = lansiaList.filter(l => {
     const last = getPemeriksaanTerakhir(l.id, pemList);
-    
-    // Tambah ini sementara untuk debug
-    console.log("Lansia:", l.nama, "| last pem:", last);
-    console.log("tensi:", last?.tensi, "gula:", last?.gulaDarah);
-    
-    if (!last) return false;
-    const tensiTinggi = last.tensi     && parseFloat(last.tensi)     >= 140;
-    const gulaTinggi  = last.gulaDarah && parseFloat(last.gulaDarah) >= 200;
-    return tensiTinggi && gulaTinggi;
+    if (!last?.tensi) return false;
+    const s = getStatusTensi(parseFloat(last.tensi));
+    return s?.status === "tinggi1" || s?.status === "tinggi2";
   }).length;
 
-  const waspadaCount = lansiaList.filter(l => {
+  const risikodiabetes = lansiaList.filter(l => {
     const last = getPemeriksaanTerakhir(l.id, pemList);
-    if (!last) return false;
-
-    const tensiVal = last.tensi     ? parseFloat(last.tensi)     : null;
-    const gulaVal  = last.gulaDarah ? parseFloat(last.gulaDarah) : null;
-
-    if (tensiVal >= 140 && gulaVal >= 200) return false;
-
-    const tensiSt = tensiVal ? getStatusTensi(tensiVal) : null;
-    const gulaSt  = gulaVal  ? getStatusGula(gulaVal)   : null;
-
-    const tensiWaspada = tensiSt && tensiSt.status !== "normal";
-    const gulaWaspada  = gulaSt  && gulaSt.label   !== "Normal";
-
-    return tensiWaspada || gulaWaspada;
+    if (!last?.gulaDarah) return false;
+    const s = getStatusGula(parseFloat(last.gulaDarah));
+    return s?.label === "Diabetes";
   }).length;
 
   // const bulanIni = lansiaList.filter(l => {
@@ -886,7 +868,7 @@ export default function PosyanduLansiaPage() {
       {/* TAB BAR */}
       <div style={{ display: "flex", gap: 6, background: "#fff", border: "1px solid #e4ede6", borderRadius: 14, padding: 5, width: "fit-content", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
         {[
-          { id: "data",        label: "Data Lansia",       icon: Users    },
+          { id: "data", label: "Data Lansia", icon: Users },
           { id: "pemeriksaan", label: "Input Pemeriksaan", icon: Activity },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setTab(id)} style={{
@@ -907,12 +889,12 @@ export default function PosyanduLansiaPage() {
       {/* TAB DATA LANSIA */}
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
             {[
-              { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#e8f5ed" },
-              { icon: AlertTriangle, label: "Risiko Tinggi",  value: loadingLansia ? "–" : risikoTinggi, sub: "Tensi/gula darah tinggi", accent: "#be185d", bg: "#fce7f3" },
-              { icon: AlertCircle,   label: "Waspada",        value: loadingLansia ? "–" : waspadaCount,  sub: "Pra-hipertensi/diabetes", accent: "#d97706", bg: "#fef3c7" },
-              { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",   accent: "#d97706", bg: "#fef3c7" },
+              { icon: Users, label: "Total Lansia", value: loadingLansia ? "–" : totalLansia, sub: "Terdaftar aktif", accent: "#2d7a4f", bg: "#e8f5ed" },
+              { icon: Heart, label: "Risiko Hipertensi", value: (loadingLansia || loadingPem) ? "–" : risikoHipertensi, sub: "Hipertensi Tk. 1 & Tk. 2", accent: "#dc2626", bg: "#fee2e2" },
+              { icon: Droplets, label: "Risiko Diabetes", value: (loadingLansia || loadingPem) ? "–" : risikodiabetes, sub: "Gula darah ≥ 200 mg/dL", accent: "#d97706", bg: "#fef3c7" },
+              { icon: Calendar, label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni, sub: "Lansia terdaftar baru", accent: "#be185d", bg: "#fce7f3" },
             ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
               <div key={label} className="stat-card">
                 <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent, borderRadius: "14px 0 0 14px" }} />
@@ -947,15 +929,15 @@ export default function PosyanduLansiaPage() {
                 <thead>
                   <tr style={{ background: "#f8fbf9" }}>
                     {[
-                      { label: "No",            field: null },
-                      { label: "NIK",           field: "nik" },
-                      { label: "Nama Lansia",   field: "nama" },
-                      { label: "Tgl Lahir",     field: "tglLahir" },
-                      { label: "Usia",          field: null },
-                      { label: "No Telp",       field: "noTelp" },
-                      { label: "Alamat",        field: "alamat" },
+                      { label: "No", field: null },
+                      { label: "NIK", field: "nik" },
+                      { label: "Nama Lansia", field: "nama" },
+                      { label: "Tgl Lahir", field: "tglLahir" },
+                      { label: "Usia", field: null },
+                      { label: "No Telp", field: "noTelp" },
+                      { label: "Alamat", field: "alamat" },
                       { label: "Jenis Kelamin", field: "jenisKelamin" },
-                      { label: "Aksi",          field: null },
+                      { label: "Aksi", field: null },
                     ].map(({ label, field }) => (
                       <th key={label} style={{ padding: "11px 14px", textAlign: "left", borderBottom: "1px solid #e4ede6", whiteSpace: "nowrap" }}>
                         {field
@@ -1006,13 +988,13 @@ export default function PosyanduLansiaPage() {
                         {lansia.jenisKelamin === "Laki-laki"
                           ? <span className="badge-laki">♂ Laki-laki</span>
                           : lansia.jenisKelamin === "Perempuan"
-                          ? <span className="badge-perempuan">♀ Perempuan</span>
-                          : <span className="badge-null">-</span>
+                            ? <span className="badge-perempuan">♀ Perempuan</span>
+                            : <span className="badge-null">-</span>
                         }
                       </td>
                       <td style={{ padding: "12px 14px" }}>
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button className="btn-edit"  onClick={() => { setEditData(lansia); setShowModal(true); }}><Pencil size={12} /> Edit</button>
+                          <button className="btn-edit" onClick={() => { setEditData(lansia); setShowModal(true); }}><Pencil size={12} /> Edit</button>
                           <button className="btn-hapus" onClick={() => setDeleteTarget(lansia)}><Trash2 size={12} /> Hapus</button>
                         </div>
                       </td>
@@ -1081,8 +1063,8 @@ export default function PosyanduLansiaPage() {
                     <tr><td colSpan={12} style={{ padding: "36px", textAlign: "center", color: "#9aab9a" }}>Belum ada data pemeriksaan.</td></tr>
                   )}
                   {!loadingPem && filteredPem.map((p, i) => {
-                    const tensiSt = p.tensi     ? getStatusTensi(parseFloat(p.tensi))     : null;
-                    const gulaSt  = p.gulaDarah ? getStatusGula(parseFloat(p.gulaDarah))  : null;
+                    const tensiSt = p.tensi ? getStatusTensi(parseFloat(p.tensi)) : null;
+                    const gulaSt = p.gulaDarah ? getStatusGula(parseFloat(p.gulaDarah)) : null;
                     return (
                       <tr key={p.id} className="tr-row">
                         <td style={{ padding: "12px 14px", color: "#9aab9a", fontSize: 12 }}>{i + 1}</td>
@@ -1154,8 +1136,8 @@ export default function PosyanduLansiaPage() {
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", gap: 6 }}>
                             <button className="btn-detail" onClick={() => setDetailData(p)}><Info size={12} /> Detail</button>
-                            <button className="btn-edit"   onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
-                            <button className="btn-hapus"  onClick={() => setDeletePemTarget(p)}><Trash2 size={12} /> Hapus</button>
+                            <button className="btn-edit" onClick={() => { setEditPem(p); setShowPemForm(true); }}><Pencil size={12} /> Edit</button>
+                            <button className="btn-hapus" onClick={() => setDeletePemTarget(p)}><Trash2 size={12} /> Hapus</button>
                           </div>
                         </td>
                       </tr>

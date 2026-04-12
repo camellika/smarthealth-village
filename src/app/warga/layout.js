@@ -109,9 +109,7 @@ export default function WargaLayout({ children }) {
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
 
-          <Link href="/warga" className={`nav-link ${path === "/warga" ? "active" : ""}`}>
-            <LayoutDashboard size={16} /> Dashboard
-          </Link>
+         
 
           {NAV_RIWAYAT.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
@@ -175,3 +173,4 @@ export default function WargaLayout({ children }) {
     </div>
   );
 }
+
