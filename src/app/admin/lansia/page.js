@@ -747,32 +747,36 @@ export default function PosyanduLansiaPage() {
   }
 
   const totalLansia  = lansiaList.length;
+  function getPemeriksaanTerakhir(lansiaId, pemList) {
+  return pemList
+    .filter(p => p.lansiaId === lansiaId)
+    .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
+  }
+
   const risikoTinggi = lansiaList.filter(l => {
-    const pem = pemList.filter(p => p.lansiaId === l.id);
-    if (!pem.length) return false;
-    const last = pem[0];
-    return (last.tensi && last.tensi > 140) || (last.gulaDarah && last.gulaDarah > 200);
-  }).length;
-  const bulanIni = lansiaList.filter(l => {
-    const d = new Date(l.tglLahir || l.createdAt);
-    return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+    const last = getPemeriksaanTerakhir(l.id, pemList);
+    if (!last) return false;
+    const tensiTinggi = last.tensi     && parseFloat(last.tensi)     >= 140;
+    const gulaTinggi  = last.gulaDarah && parseFloat(last.gulaDarah) >= 200;
+    return tensiTinggi && gulaTinggi;
   }).length;
 
-
-  // Setelah deklarasi risikoTinggi
   const waspadaCount = lansiaList.filter(l => {
-    const pem = pemList.filter(p => p.lansiaId === l.id);
-    if (!pem.length) return false;
-    const last = pem[0];
-    const tensiSt = last.tensi ? getStatusTensi(parseFloat(last.tensi)) : null;
-    const gulaSt  = last.gulaDarah ? getStatusGula(parseFloat(last.gulaDarah)) : null;
-    // Waspada = ada status prehiper/rendah pada tensi, ATAU pra-diabetes pada gula
-    // tapi BUKAN risiko tinggi (tinggi1/tinggi2 atau diabetes)
-    const isRisiko = (last.tensi && last.tensi >= 140) || (last.gulaDarah && last.gulaDarah >= 200);
-    if (isRisiko) return false;
-    const adaWaspadaTensi = tensiSt && (tensiSt.status === "prehiper" || tensiSt.status === "rendah");
-    const adaWaspadaGula  = gulaSt  && gulaSt.label === "Pra-Diabetes";
-    return adaWaspadaTensi || adaWaspadaGula;
+    const last = getPemeriksaanTerakhir(l.id, pemList);
+    if (!last) return false;
+
+    const tensiVal = last.tensi     ? parseFloat(last.tensi)     : null;
+    const gulaVal  = last.gulaDarah ? parseFloat(last.gulaDarah) : null;
+
+    if (tensiVal >= 140 && gulaVal >= 200) return false;
+
+    const tensiSt = tensiVal ? getStatusTensi(tensiVal) : null;
+    const gulaSt  = gulaVal  ? getStatusGula(gulaVal)   : null;
+
+    const tensiWaspada = tensiSt && tensiSt.status !== "normal";
+    const gulaWaspada  = gulaSt  && gulaSt.label   !== "Normal";
+
+    return tensiWaspada || gulaWaspada;
   }).length;
 
   const filteredPem = pemList.filter(p =>
