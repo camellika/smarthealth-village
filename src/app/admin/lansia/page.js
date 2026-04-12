@@ -749,10 +749,10 @@ export default function PosyanduLansiaPage() {
   const totalLansia  = lansiaList.length;
 
   function getPemeriksaanTerakhir(lansiaId, pemList) {
-    return pemList
-      .filter(p => String(p.lansiaId) === String(lansiaId)) // ← paksa keduanya string
-      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
-  }
+  return pemList
+    .filter(p => String(p.lansiaId) === String(lansiaId)) // ← paksa keduanya string
+    .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
+}
 
   const risikoTinggi = lansiaList.filter(l => {
     const last = getPemeriksaanTerakhir(l.id, pemList);
@@ -785,9 +785,16 @@ export default function PosyanduLansiaPage() {
     return tensiWaspada || gulaWaspada;
   }).length;
 
+  // const bulanIni = lansiaList.filter(l => {
+  //   const d = new Date(l.tglLahir || l.createdAt);
+  //   return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+  // }).length;
+
   const bulanIni = lansiaList.filter(l => {
-    const d = new Date(l.tglLahir || l.createdAt);
-    return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+    console.log(l.nama, "createdAt:", l.createdAt); // ← cek apakah ada nilainya
+    const d = new Date(l.createdAt);
+    return d.getMonth() === new Date().getMonth() && 
+          d.getFullYear() === new Date().getFullYear();
   }).length;
 
 
