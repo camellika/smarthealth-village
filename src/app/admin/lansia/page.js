@@ -749,13 +749,18 @@ export default function PosyanduLansiaPage() {
   const totalLansia  = lansiaList.length;
 
   function getPemeriksaanTerakhir(lansiaId, pemList) {
-  return pemList
-    .filter(p => p.lansiaId === lansiaId)
-    .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
+    return pemList
+      .filter(p => String(p.lansiaId) === String(lansiaId)) // ← paksa keduanya string
+      .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal))[0] ?? null;
   }
 
   const risikoTinggi = lansiaList.filter(l => {
     const last = getPemeriksaanTerakhir(l.id, pemList);
+    
+    // Tambah ini sementara untuk debug
+    console.log("Lansia:", l.nama, "| last pem:", last);
+    console.log("tensi:", last?.tensi, "gula:", last?.gulaDarah);
+    
     if (!last) return false;
     const tensiTinggi = last.tensi     && parseFloat(last.tensi)     >= 140;
     const gulaTinggi  = last.gulaDarah && parseFloat(last.gulaDarah) >= 200;
