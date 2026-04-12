@@ -678,7 +678,9 @@ export default function PosyanduLansiaPage() {
     setLoadingLansia(true);
     setLoadingPem(true);
     try {
-      const [l, p, count] = await Promise.all([getLansia(), getPosyanduLansia(), getLansiaCount(),]);
+      const [l, p, count] = await Promise.all([getLansia(), 
+        getPosyanduLansia(),
+        getLansiaCount().catch(() => 0),]);
       setLansiaList(l);
       setPemList(p);
       setBulanIni(count);

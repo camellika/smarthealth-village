@@ -18,18 +18,23 @@ export async function getLansiaById(id) {
 }
 
 export async function getLansiaCount() {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-  
-  return await prisma.lansia.count({
-    where: {
-      createdAt: {
-        gte: startOfMonth,
-        lte: endOfMonth,
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    
+    return await prisma.lansia.count({
+      where: {
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        }
       }
-    }
-  });
+    });
+  } catch (err) {
+    console.error("getLansiaCount error:", err);
+    return 0; // ← return 0 kalau error, tidak crash
+  }
 }
 
 export async function createLansia(data) {
