@@ -409,8 +409,8 @@ export default function LaporanPage() {
           <img src="${logoUrl}" alt="Logo Desa" onerror="this.style.display='none'" />
           <div class="kop-center">
             <p class="kop-instansi">Pemerintah Desa</p>
-            <p class="kop-nama">NAMA DESA ANDA</p>
-            <p class="kop-alamat">Jl. Nama Jalan No. XX, Kecamatan ..., Kabupaten ..., Provinsi ... · Kode Pos XXXXX</p>
+            <p class="kop-nama">PANEMBANGAN</p>
+            <p class="kop-alamat">Jalan Raya, Dusun I, Panembangan, Cilongok, Kabupaten Banyumas, Kode pos 53162</p>
           </div>
           <div class="kop-right"></div>
         </div>

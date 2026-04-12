@@ -154,7 +154,7 @@ export default function AdminLayout({ children }) {
             </div>
             <div>
               <p style={{ fontSize: 12, fontWeight: 700, color: "#1f2d1f" }}>{user?.name ?? "Admin"}</p>
-              <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Ceria</p>
+              <p style={{ fontSize: 10, color: "#9aab9a" }}>Desa Panembangan</p>
             </div>
           </div>
           <button

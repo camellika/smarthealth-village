@@ -304,7 +304,7 @@ export default function LoginPages() {
               <div className="logo-title">
                 SmartHealth<span>Village</span>
               </div>
-              <div className="logo-sub">Sistem Kesehatan Desa</div>
+              <div className="logo-sub">Sistem Monitoring Kesehatan Desa Panembangan</div>
             </div>
           </div>
 

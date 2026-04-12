@@ -887,7 +887,6 @@ export default function PosyanduPage() {
             <div style={{ padding: "16px 20px", borderBottom: "1px solid #f0f6f2", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <div>
                 <p style={{ fontSize: 15, fontWeight: 700, color: "#1f2d1f" }}>Daftar Balita</p>
-                <p style={{ fontSize: 12, color: "#9aab9a", marginTop: 2 }}>{filtered.length} data ditemukan</p>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <div style={{ position: "relative" }}>

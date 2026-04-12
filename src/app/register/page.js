@@ -198,7 +198,6 @@ export default function RegisterPage() {
                 <div style={{ fontWeight:800, fontSize:16, color:"#1a2e1a", letterSpacing:-.3 }}>
                   SmartHealth<span style={{ color:"#2d7a4f" }}>Village</span>
                 </div>
-                <div style={{ fontSize:11, color:"#7a9a7a", fontWeight:500, marginTop:1 }}>Sistem Kesehatan Desa</div>
               </div>
             </div>
 

@@ -548,7 +548,7 @@ export default function Home() {
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#e8f5ed", border: "1px solid #b8ddc5", borderRadius: 50, padding: "6px 14px", marginBottom: 22 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2d7a4f", animation: "pulse-dot 2s ease-in-out infinite" }} />
-              <span style={{ color: "#2d7a4f", fontSize: 13, fontWeight: 600 }}>Sistem Aktif · Desa Ceria</span>
+              <span style={{ color: "#2d7a4f", fontSize: 13, fontWeight: 600 }}>Sistem Informasi · Desa Panembangan</span>
             </div>
             <h1 className="hero-title">Sistem Monitoring<br /><span style={{ color: "#2d7a4f" }}>Kesehatan Desa</span></h1>
             <p style={{ color: "#5a7060", lineHeight: 1.75, marginTop: 18, fontSize: 15.5, maxWidth: 440, animation: "slide-up 0.7s 0.1s ease both", opacity: 0, animationFillMode: "forwards" }}>
@@ -931,7 +931,7 @@ export default function Home() {
             <div>
               <h4 style={{ color: "#e8f5ed", fontSize: 14, marginBottom: 10 }}>Kontak</h4>
               {[
-                { icon: MapPin, text: "Jl. Desa Ceria No.1, Jawa Tengah" },
+                { icon: MapPin, text: "Jalan Raya, Dusun I, Panembangan, Cilongok, Banyumas" },
                 { icon: Phone,  text: "+62 812-3456-7890" },
                 { icon: Mail,   text: "info@smarthealthvillage.id" },
               ].map(({ icon: Icon, text }) => (
