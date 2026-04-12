@@ -747,6 +747,7 @@ export default function PosyanduLansiaPage() {
   }
 
   const totalLansia  = lansiaList.length;
+
   function getPemeriksaanTerakhir(lansiaId, pemList) {
   return pemList
     .filter(p => p.lansiaId === lansiaId)
@@ -778,6 +779,12 @@ export default function PosyanduLansiaPage() {
 
     return tensiWaspada || gulaWaspada;
   }).length;
+
+  const bulanIni = lansiaList.filter(l => {
+    const d = new Date(l.tglLahir || l.createdAt);
+    return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
+  }).length;
+
 
   const filteredPem = pemList.filter(p =>
     p.lansia?.nama?.toLowerCase().includes(searchPem.toLowerCase()) ||
