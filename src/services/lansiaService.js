@@ -3,12 +3,22 @@
 import prisma from "@/lib/prisma";
 
 export async function getLansia() {
-  return await prisma.lansia.findMany({
+  const data = await prisma.lansia.findMany({
     include: {
       user: true,
       riwayat: true,
     },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
+
+  // Serialize createdAt ke string agar bisa dikirim ke client
+  return data.map(l => ({
+    ...l,
+    createdAt: l.createdAt?.toISOString() ?? null,
+    tglLahir:  l.tglLahir?.toISOString()  ?? null,
+  }));
 }
 
 export async function getLansiaById(id) {
