@@ -647,9 +647,18 @@ export default function PosyanduPage() {
   const [deletePemTarget, setDeletePemTarget] = useState(null);
   const [deletingPem, setDeletingPem] = useState(false);
 
-  useEffect(() => { loadBalita(); }, []);
-  useEffect(() => {
+  // useEffect(() => { loadBalita(); }, []);
+  // useEffect(() => {
 
+  //   if (tab === "pemeriksaan") loadPemeriksaan();
+  // }, [tab]);
+
+  useEffect(() => {
+  loadBalita();
+  loadPemeriksaan(); // ← tambahkan ini agar pemHistory tersedia dari awal
+  }, []);
+
+  useEffect(() => {
     if (tab === "pemeriksaan") loadPemeriksaan();
   }, [tab]);
 

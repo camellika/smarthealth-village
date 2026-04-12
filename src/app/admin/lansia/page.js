@@ -758,6 +758,23 @@ export default function PosyanduLansiaPage() {
     return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
   }).length;
 
+
+  // Setelah deklarasi risikoTinggi
+  const waspadaCount = lansiaList.filter(l => {
+    const pem = pemList.filter(p => p.lansiaId === l.id);
+    if (!pem.length) return false;
+    const last = pem[0];
+    const tensiSt = last.tensi ? getStatusTensi(parseFloat(last.tensi)) : null;
+    const gulaSt  = last.gulaDarah ? getStatusGula(parseFloat(last.gulaDarah)) : null;
+    // Waspada = ada status prehiper/rendah pada tensi, ATAU pra-diabetes pada gula
+    // tapi BUKAN risiko tinggi (tinggi1/tinggi2 atau diabetes)
+    const isRisiko = (last.tensi && last.tensi >= 140) || (last.gulaDarah && last.gulaDarah >= 200);
+    if (isRisiko) return false;
+    const adaWaspadaTensi = tensiSt && (tensiSt.status === "prehiper" || tensiSt.status === "rendah");
+    const adaWaspadaGula  = gulaSt  && gulaSt.label === "Pra-Diabetes";
+    return adaWaspadaTensi || adaWaspadaGula;
+  }).length;
+
   const filteredPem = pemList.filter(p =>
     p.lansia?.nama?.toLowerCase().includes(searchPem.toLowerCase()) ||
     p.kegiatan?.toLowerCase().includes(searchPem.toLowerCase())
@@ -865,6 +882,7 @@ export default function PosyanduLansiaPage() {
             {[
               { icon: Users,         label: "Total Lansia",   value: loadingLansia ? "–" : totalLansia,  sub: "Terdaftar aktif",        accent: "#2d7a4f", bg: "#e8f5ed" },
               { icon: AlertTriangle, label: "Risiko Tinggi",  value: loadingLansia ? "–" : risikoTinggi, sub: "Tensi/gula darah tinggi", accent: "#be185d", bg: "#fce7f3" },
+              { icon: AlertCircle,   label: "Waspada",        value: loadingLansia ? "–" : waspadaCount,  sub: "Pra-hipertensi/diabetes", accent: "#d97706", bg: "#fef3c7" },
               { icon: Calendar,      label: "Baru Bulan Ini", value: loadingLansia ? "–" : bulanIni,     sub: "Lansia terdaftar baru",   accent: "#d97706", bg: "#fef3c7" },
             ].map(({ icon: Icon, label, value, sub, accent, bg }) => (
               <div key={label} className="stat-card">
