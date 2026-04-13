@@ -4,8 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  HeartPulse, LayoutDashboard, FileText,
-  CalendarDays, LogOut, Bell
+  HeartPulse, FileText, LogOut, Bell, Menu, X
 } from "lucide-react";
 import { logout, getCurrentUser } from "@/services/authService";
 
@@ -16,10 +15,10 @@ const NAV_RIWAYAT = [
 export default function WargaLayout({ children }) {
   const path   = usePathname();
   const router = useRouter();
-  const [user, setUser]       = useState(null);
-  const [checked, setChecked] = useState(false);
+  const [user, setUser]           = useState(null);
+  const [checked, setChecked]     = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ── Cek session sekali saat layout dimuat ──
   useEffect(() => {
     getCurrentUser().then((u) => {
       if (!u || u.rol !== "user") {
@@ -31,11 +30,19 @@ export default function WargaLayout({ children }) {
     });
   }, []);
 
+  // Tutup sidebar saat resize ke desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleLogout = async () => {
     await logout();
   };
 
-  // Tampilkan blank sementara pengecekan berlangsung
   if (!checked) return null;
 
   return (
@@ -86,13 +93,80 @@ export default function WargaLayout({ children }) {
         .badge-red    { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
         .badge-yellow { background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
         .badge-pink   { background:#fce7f3;color:#be185d;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+          width: 232px;
+          background: #fff;
+          border-right: 1px solid #e4ede6;
+          display: flex;
+          flex-direction: column;
+          padding: 0 12px;
+          position: fixed;
+          top: 0; left: 0;
+          height: 100vh;
+          flex-shrink: 0;
+          z-index: 40;
+          overflow-y: auto;
+          transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+        }
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.45);
+          z-index: 39;
+          backdrop-filter: blur(2px);
+        }
+        .main-content {
+          margin-left: 232px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          overflow: auto;
+          min-width: 0;
+        }
+        .hamburger-btn {
+          display: none;
+          align-items: center;
+          justify-content: center;
+          background: #f5f7f4;
+          border: 1px solid #e4ede6;
+          border-radius: 9px;
+          padding: 7px 8px;
+          cursor: pointer;
+          gap: 5px;
+          flex-direction: column;
+        }
+        .hamburger-btn .bar {
+          display: block;
+          width: 18px;
+          height: 2px;
+          background: #1f2d1f;
+          border-radius: 2px;
+          transition: all 0.22s;
+        }
+
+        @media (max-width: 768px) {
+          .sidebar { transform: translateX(-100%); }
+          .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.12); }
+          .sidebar-overlay.open { display: block; }
+          .main-content { margin-left: 0; }
+          .hamburger-btn { display: flex; }
+        }
       `}</style>
 
+      {/* Overlay */}
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
       {/* ══ SIDEBAR ══ */}
-      <aside style={{ width: 232, background: "#fff", borderRight: "1px solid #e4ede6", display: "flex", flexDirection: "column", padding: "0 12px", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 40, overflowY: "auto" }}>
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
 
         {/* Logo */}
-        <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8 }}>
+        <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ background: "#2d7a4f", borderRadius: 9, padding: "6px 7px", display: "flex" }}>
               <HeartPulse size={16} color="white" />
@@ -104,22 +178,30 @@ export default function WargaLayout({ children }) {
               <p style={{ fontSize: 10, color: "#9aab9a" }}>Portal Warga</p>
             </div>
           </div>
+          {/* Tombol X di dalam sidebar (mobile) */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", borderRadius: 8 }}
+          >
+            <X size={18} color="#9aab9a" />
+          </button>
         </div>
 
         {/* Nav */}
         <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-
-         
-
           {NAV_RIWAYAT.map(({ href, label, icon: Icon }) => {
             const active = path === href || path.startsWith(href + "/");
             return (
-              <Link key={href} href={href} className={`nav-link ${active ? "active" : ""}`}>
+              <Link
+                key={href}
+                href={href}
+                className={`nav-link ${active ? "active" : ""}`}
+                onClick={() => setSidebarOpen(false)}
+              >
                 <Icon size={16} /> {label}
               </Link>
             );
           })}
-
         </nav>
 
         {/* User + logout */}
@@ -145,11 +227,23 @@ export default function WargaLayout({ children }) {
       </aside>
 
       {/* ══ PAGE CONTENT ══ */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+      <div className="main-content">
 
         {/* Top bar */}
-        <header style={{ background: "#fff", borderBottom: "1px solid #e4ede6", padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 30, flexShrink: 0 }}>
-          <div>
+        <header style={{ background: "#fff", borderBottom: "1px solid #e4ede6", padding: "0 20px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 30, flexShrink: 0, gap: 12 }}>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {/* Hamburger — hanya muncul di mobile via CSS */}
+            <button
+              className="hamburger-btn"
+              onClick={() => setSidebarOpen(s => !s)}
+              aria-label="Buka menu"
+            >
+              <span className="bar" />
+              <span className="bar" />
+              <span className="bar" />
+            </button>
+
             <p style={{ fontSize: 15, fontWeight: 800, color: "#1f2d1f" }}>
               {path === "/warga"
                 ? "Dashboard"
@@ -161,7 +255,8 @@ export default function WargaLayout({ children }) {
               }
             </p>
           </div>
-          <button style={{ background: "#f5f7f4", border: "1px solid #e4ede6", borderRadius: 10, padding: "7px 9px", cursor: "pointer", display: "flex", position: "relative" }}>
+
+          <button style={{ background: "#f5f7f4", border: "1px solid #e4ede6", borderRadius: 10, padding: "7px 9px", cursor: "pointer", display: "flex", position: "relative", flexShrink: 0 }}>
             <Bell size={15} color="#6b7c6b" />
           </button>
         </header>
@@ -173,4 +268,3 @@ export default function WargaLayout({ children }) {
     </div>
   );
 }
-

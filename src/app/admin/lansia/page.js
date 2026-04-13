@@ -889,7 +889,11 @@ export default function PosyanduLansiaPage() {
       {/* TAB DATA LANSIA */}
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 14
+          }}>
             {[
               { icon: Users, label: "Total Lansia", value: loadingLansia ? "–" : totalLansia, sub: "Terdaftar aktif", accent: "#2d7a4f", bg: "#e8f5ed" },
               { icon: Heart, label: "Risiko Hipertensi", value: (loadingLansia || loadingPem) ? "–" : risikoHipertensi, sub: "Hipertensi Tk. 1 & Tk. 2", accent: "#dc2626", bg: "#fee2e2" },

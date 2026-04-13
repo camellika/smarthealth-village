@@ -478,13 +478,13 @@ function PemeriksaanFormModal({ balitaList, onClose, onSubmit, saving, editData 
   const [pemForm, setPemForm] = useState(
     isEdit
       ? {
-          balitaId: editData.balitaId,
-          kegiatan: editData.kegiatan,
-          bb: editData.bb ?? "",
-          tb: editData.tb ?? "",
-          lingkarKepala: editData.lingkarKepala ?? "",
-          lingkarLengan: editData.lingkarLengan ?? "",
-        }
+        balitaId: editData.balitaId,
+        kegiatan: editData.kegiatan,
+        bb: editData.bb ?? "",
+        tb: editData.tb ?? "",
+        lingkarKepala: editData.lingkarKepala ?? "",
+        lingkarLengan: editData.lingkarLengan ?? "",
+      }
       : PEMERIKSAAN_INIT
   );
 
@@ -654,8 +654,8 @@ export default function PosyanduPage() {
   // }, [tab]);
 
   useEffect(() => {
-  loadBalita();
-  loadPemeriksaan(); // ← tambahkan ini agar pemHistory tersedia dari awal
+    loadBalita();
+    loadPemeriksaan(); // ← tambahkan ini agar pemHistory tersedia dari awal
   }, []);
 
   useEffect(() => {
@@ -872,7 +872,11 @@ export default function PosyanduPage() {
       {/* TAB DATA BALITA */}
       {tab === "data" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14 }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+            gap: 14
+          }}>
             {[
               { icon: Baby, label: "Total Balita", value: loadingBalita ? "–" : totalBalita, sub: "Terdaftar aktif", accent: "#2d7a4f", bg: "#e8f5ed" },
               { icon: AlertTriangle, label: "Stunting", value: (loadingBalita || loadingPem) ? "–" : stuntingCount, sub: "Terdeteksi pemeriksaan", accent: "#d97706", bg: "#fef3c7" },
@@ -1059,7 +1063,7 @@ export default function PosyanduPage() {
                           }
                         </td>
                         {/* ── Kolom Detail ── */}
-                       
+
                         <td style={{ padding: "12px 14px" }}>
                           <div style={{ display: "flex", gap: 6 }}>
                             <button className="btn-detail" onClick={() => setDetailData(p)}>

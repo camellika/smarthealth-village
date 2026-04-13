@@ -322,7 +322,22 @@ export default function DashboardPage() {
         }
         .section-title { font-size:14px; font-weight:800; color:#1f2d1f; margin:0 0 2px; }
         .section-sub   { font-size:12px; color:#9aab9a; margin:0; }
-      `}</style>
+        @media (max-width: 768px) {
+        .stat-card {
+          padding: 14px !important;
+        }
+
+        .section-title {
+          font-size: 13px !important;
+        }
+
+        .section-sub {
+          font-size: 11px !important;
+        }
+      }
+      `
+      
+      }</style>
 
       {/* ════════════════════════════════════
           SEKSI BALITA
@@ -349,7 +364,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat cards balita — sesuai tampilan gambar */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:14, marginBottom:16 }}>
           {[
             { icon:Baby,          label:"Total Balita",      value:totalBalita,        sub:"Terdaftar aktif",         accent:"#2d7a4f", bg:"#e8f5ed" },
             { icon:AlertTriangle, label:"Stunting",          value:stuntingCount,      sub:"Terdeteksi pemeriksaan",  accent:"#d97706", bg:"#fef3c7" },
@@ -374,7 +389,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts BB & TB */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16, marginBottom:16 }}>
 
           {/* Tren Berat Badan */}
           <div className="card" style={{ padding:20 }}>
@@ -457,7 +472,7 @@ export default function DashboardPage() {
             </div>
           </div>
           {loading ? <LoadingRow color="#2d7a4f" /> : (
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:"12px 28px" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"12px 28px" }}>
               {statusGiziData.map(({ label, value, color, bg }) => {
                 const total = Math.max(statusGiziData.reduce((s,i) => s+i.value, 0), 1);
                 const pct   = ((value / total) * 100).toFixed(1);
@@ -521,7 +536,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat cards lansia */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:14, marginBottom:16 }}>
           {[
             { icon:Users,         label:"Total Lansia",      value:totalLansia,  sub:"Terdaftar aktif",         accent:"#2563ab", bg:"#eaf3fb" },
             { icon:AlertTriangle, label:"Risiko Tinggi",     value:risikoTinggi, sub:"Tensi/gula darah tinggi", accent:"#be185d", bg:"#fce7f3" },
@@ -546,7 +561,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts tren vital lansia */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16, marginBottom:16 }}>
 
           {/* Tren Tekanan Darah */}
           <div className="card" style={{ padding:20 }}>
@@ -616,7 +631,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Distribusi + Jadwal + Risiko */}
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16 }}>
 
           {/* Distribusi status kesehatan lansia */}
           <div className="card" style={{ padding:20 }}>

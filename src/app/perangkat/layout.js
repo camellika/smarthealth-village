@@ -14,10 +14,11 @@ const NAV_LAPORAN = [
 ];
 
 export default function PerangkatLayout({ children }) {
-  const path   = usePathname();
+  const path = usePathname();
   const router = useRouter();
-  const [user, setUser]       = useState(null);
+  const [user, setUser] = useState(null);
   const [checked, setChecked] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // ── Cek session sekali saat layout dimuat ──
   useEffect(() => {
@@ -29,6 +30,14 @@ export default function PerangkatLayout({ children }) {
         setChecked(true);
       }
     });
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   const handleLogout = async () => {
@@ -86,13 +95,85 @@ export default function PerangkatLayout({ children }) {
         .badge-red    { background:#fee2e2;color:#dc2626;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
         .badge-yellow { background:#fef3c7;color:#d97706;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
         .badge-pink   { background:#fce7f3;color:#be185d;font-size:11px;font-weight:700;padding:3px 10px;border-radius:50px; }
+
+        /* ── SIDEBAR RESPONSIVE ── */
+        .sidebar {
+          width: 232px;
+          background: #fff;
+          border-right: 1px solid #e4ede6;
+          display: flex;
+          flex-direction: column;
+          padding: 0 12px;
+          position: fixed;
+          top: 0;
+          left: 0;
+          height: 100vh;
+          z-index: 40;
+          overflow-y: auto;
+          transition: transform 0.28s ease;
+        }
+
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.4);
+          z-index: 39;
+        }
+
+        .main-content {
+          margin-left: 232px;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .hamburger-btn {
+          display: none;
+          background: #f5f7f4;
+          border: 1px solid #e4ede6;
+          border-radius: 9px;
+          padding: 6px;
+          cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+          .sidebar {
+            transform: translateX(-100%);
+          }
+
+          .sidebar.open {
+            transform: translateX(0);
+          }
+
+          .sidebar-overlay.open {
+            display: block;
+          }
+
+          .main-content {
+            margin-left: 0;
+          }
+
+          .hamburger-btn {
+            display: block;
+          }
+        }
       `}</style>
-
+      <div
+        className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
       {/* ══ SIDEBAR ══ */}
-      <aside style={{ width: 232, background: "#fff", borderRight: "1px solid #e4ede6", display: "flex", flexDirection: "column", padding: "0 12px", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 40, overflowY: "auto" }}>
-
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         {/* Logo */}
-        <div style={{ padding: "18px 6px 16px", borderBottom: "1px solid #f0f6f2", marginBottom: 8 }}>
+        <div style={{
+          padding: "18px 6px 16px",
+          borderBottom: "1px solid #f0f6f2",
+          marginBottom: 8,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
             <div style={{ background: "#2d7a4f", borderRadius: 9, padding: "6px 7px", display: "flex" }}>
               <HeartPulse size={16} color="white" />
@@ -147,20 +228,27 @@ export default function PerangkatLayout({ children }) {
       </aside>
 
       {/* ══ PAGE CONTENT ══ */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-
+      <div className="main-content">
         {/* Top bar */}
         <header style={{ background: "#fff", borderBottom: "1px solid #e4ede6", padding: "0 28px", height: 56, display: "flex", alignItems: "center", justifyContent: "space-between", position: "sticky", top: 0, zIndex: 30, flexShrink: 0 }}>
-          <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <p style={{ fontSize: 15, fontWeight: 800, color: "#1f2d1f" }}>
               {path === "/perangkat"
                 ? "Dashboard Utama"
                 : [...NAV_LAPORAN]
-                    .slice()
-                    .reverse()
-                    .find(n => path === n.href || path.startsWith(n.href + "/"))
-                    ?.label ?? "Laporan Posyandu Balita & Lansia"
+                  .slice()
+                  .reverse()
+                  .find(n => path === n.href || path.startsWith(n.href + "/"))
+                  ?.label ?? "Laporan Posyandu Balita & Lansia"
               }
+              <button
+                className="hamburger-btn"
+                onClick={() => setSidebarOpen(s => !s)}
+              >
+                <div style={{ width: 18, height: 2, background: "#1f2d1f", marginBottom: 3 }} />
+                <div style={{ width: 18, height: 2, background: "#1f2d1f", marginBottom: 3 }} />
+                <div style={{ width: 18, height: 2, background: "#1f2d1f" }} />
+              </button>
             </p>
           </div>
           <button style={{ background: "#f5f7f4", border: "1px solid #e4ede6", borderRadius: 10, padding: "7px 9px", cursor: "pointer", display: "flex", position: "relative" }}>

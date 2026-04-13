@@ -912,6 +912,12 @@ export default function RiwayatPemeriksaanPage() {
         .stat-card { background:#fff;border:1px solid #e4ede6;border-radius:14px;padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.04);display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;animation:fadeUp 0.35s ease; }
         .card      { background:#fff;border:1px solid #e4ede6;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04); }
         .tab-btn   { display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.18s; }
+      @media (max-width: 640px) {
+  .rw-search { width: 100%!important; }
+  .rw-select { width: 100%!important; }
+  .stat-card p:last-child { display:none; }
+}
+      
       `}</style>
 
       {/* ══ HEADER ════════════════════════════ */}
@@ -967,7 +973,7 @@ export default function RiwayatPemeriksaanPage() {
 
       {/* ══ STAT CARDS ════════════════════════ */}
       {!loading && activeTab && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 13 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: 13 }}>
           {statCards.map(({ icon: Icon, label, value, sub, accent, bg }) => (
             <div key={label} className="stat-card">
               <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: accent, borderRadius: "14px 0 0 14px" }} />
@@ -1042,7 +1048,7 @@ export default function RiwayatPemeriksaanPage() {
         </div>
 
         {/* Table */}
-        <div style={{ overflowX: "auto" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#f8fbf9" }}>
