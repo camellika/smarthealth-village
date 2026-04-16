@@ -22,28 +22,32 @@ import {
 const BULAN = ["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
 
 /* ─────────────────────────────────────────────
-   ANTHROPOMETRI HELPERS (WHO 2006)
+   FIELD MAP (dari Prisma Studio):
+   Balita        → id, alamat, jenisKelamin, nama, namaIbu, nik, noTelp, tglLahir
+   PosyanduBalita→ balitaId, bb, tb, lingkarKepala, lingkarLengan, tanggal, kegiatan, createdAt
 ───────────────────────────────────────────── */
 
-/** Hitung umur dalam bulan dari tanggal lahir */
-function umurBulan(tglLahir) {
-  if (!tglLahir) return null;
-  const lahir    = new Date(tglLahir);
-  const sekarang = new Date();
-  return (
-    (sekarang.getFullYear() - lahir.getFullYear()) * 12 +
-    (sekarang.getMonth() - lahir.getMonth())
-  );
+/** Hitung umur dalam bulan — gunakan field tglLahir sesuai schema */
+function umurBulan(balita) {
+  // Field di DB adalah "tglLahir" (bukan tanggalLahir)
+  const tgl = balita?.tglLahir ?? null;
+  if (!tgl) return null;
+  const lahir = new Date(tgl);
+  if (isNaN(lahir.getTime())) return null;
+  const now = new Date();
+  return (now.getFullYear() - lahir.getFullYear()) * 12
+       + (now.getMonth()   - lahir.getMonth());
 }
 
 /**
- * Z-score BB/U (Weight-for-Age) WHO 2006.
- * [median, SD] per bulan — nilai approx.
- * Untuk produksi, ganti dengan tabel referensi lengkap atau library.
+ * Z-score BB/U (Weight-for-Age) WHO 2006
+ * [median, SD] per bulan, indeks = umur dalam bulan (0–60)
+ * jenisKelamin: "Laki-laki" | "Perempuan"
  */
 function hitungZScoreBBU(bb, umur, jk) {
   if (bb == null || umur == null || umur < 0 || umur > 60) return null;
 
+  // Laki-laki
   const refL = [
     [3.35,0.42],[4.47,0.54],[5.57,0.63],[6.40,0.70],[7.00,0.75],
     [7.51,0.78],[7.93,0.81],[8.30,0.84],[8.61,0.86],[8.90,0.88],
@@ -58,6 +62,7 @@ function hitungZScoreBBU(bb, umur, jk) {
     [17.28,1.63],[17.48,1.65],[17.68,1.67],[17.88,1.69],[18.08,1.71],
     [18.28,1.72],[18.48,1.74],[18.68,1.76],[18.88,1.78],[19.08,1.80],[19.28,1.82],
   ];
+  // Perempuan
   const refP = [
     [3.23,0.39],[4.19,0.49],[5.14,0.58],[5.85,0.64],[6.43,0.68],
     [6.88,0.72],[7.25,0.74],[7.59,0.76],[7.89,0.79],[8.17,0.81],
@@ -74,16 +79,19 @@ function hitungZScoreBBU(bb, umur, jk) {
   ];
 
   const ref       = jk === "Perempuan" ? refP : refL;
-  const [med, sd] = ref[Math.min(Math.floor(umur), ref.length - 1)];
+  const idx       = Math.min(Math.floor(umur), ref.length - 1);
+  const [med, sd] = ref[idx];
   return parseFloat(((bb - med) / sd).toFixed(2));
 }
 
 /**
- * Z-score TB/U (Height-for-Age) WHO 2006 — approx.
+ * Z-score TB/U (Height-for-Age) WHO 2006
+ * Digunakan untuk deteksi stunting & severely stunting
  */
 function hitungZScoreTBU(tb, umur, jk) {
   if (tb == null || umur == null || umur < 0 || umur > 60) return null;
 
+  // Median TB per bulan — laki-laki
   const medL = [
     49.9,54.7,58.4,61.4,63.9,65.9,67.6,69.2,70.6,72.0,73.3,74.5,75.7,
     76.9,78.0,79.1,80.2,81.2,82.3,83.2,84.2,85.1,86.0,86.9,87.8,88.7,
@@ -91,6 +99,7 @@ function hitungZScoreTBU(tb, umur, jk) {
     99.6,100.3,101.0,101.7,102.4,103.1,103.8,104.4,105.1,105.7,106.4,
     107.0,107.7,108.3,108.9,109.5,110.1,110.7,111.3,111.9,112.5,113.1,
   ];
+  // Median TB per bulan — perempuan
   const medP = [
     49.1,53.7,57.1,59.8,62.1,64.0,65.7,67.3,68.7,70.1,71.5,72.8,74.0,
     75.2,76.4,77.5,78.6,79.7,80.7,81.7,82.7,83.7,84.6,85.5,86.4,87.3,
@@ -99,8 +108,9 @@ function hitungZScoreTBU(tb, umur, jk) {
     105.3,105.9,106.5,107.1,107.7,108.3,108.8,109.4,109.9,110.5,111.0,
   ];
 
+  // SD approx WHO 2006 — untuk simplifikasi
   const sdApprox = umur < 12 ? 2.0 : umur < 24 ? 2.5 : 3.0;
-  const med      = (jk === "Perempuan" ? medP : medL)[Math.min(Math.floor(umur), 60)];
+  const med = (jk === "Perempuan" ? medP : medL)[Math.min(Math.floor(umur), 60)];
   return parseFloat(((tb - med) / sdApprox).toFixed(2));
 }
 
@@ -184,53 +194,78 @@ export default function DashboardPage() {
 
   /* ══════════════════════════════════════════
      COMPUTED — BALITA
+     
+     KUNCI PERBAIKAN:
+     - umurBulan(b) membaca b.tglLahir (sesuai schema Prisma)
+     - jenisKelamin: "Laki-laki" | "Perempuan" (sesuai data)
+     - pemeriksaan: field bb & tb dari PosyanduBalita
   ══════════════════════════════════════════ */
 
-  /** Pemeriksaan terbaru per balita + z-score */
+  /**
+   * Untuk setiap balita, cari pemeriksaan terbaru yang punya BB,
+   * lalu hitung z-score menggunakan tglLahir dari master Balita.
+   */
   const latestPemBalita = balitaList.map(b => {
+    // Ambil pemeriksaan terbaru yang ada data BB-nya
     const riwayat = pemBalita
       .filter(p => p.balitaId === b.id && p.bb != null)
       .sort((a, z) => new Date(z.tanggal) - new Date(a.tanggal));
+
     if (!riwayat.length) return null;
+
     const pem  = riwayat[0];
-    const umur = umurBulan(b.tanggalLahir);
+    // ↓ PERBAIKAN: gunakan b.tglLahir (bukan b.tanggalLahir)
+    const umur = umurBulan(b);
     const jk   = b.jenisKelamin; // "Laki-laki" | "Perempuan"
-    return {
-      ...pem,
-      umur, jk,
-      zBBU: hitungZScoreBBU(pem.bb, umur, jk),
-      zTBU: pem.tb ? hitungZScoreTBU(pem.tb, umur, jk) : null,
-    };
+
+    const zBBU = hitungZScoreBBU(pem.bb, umur, jk);
+    const zTBU = pem.tb != null ? hitungZScoreTBU(pem.tb, umur, jk) : null;
+
+    return { ...pem, balita: b, umur, jk, zBBU, zTBU };
   }).filter(Boolean);
 
+  // ── Stat cards ──
   const totalBalita        = balitaList.length;
+  // Stunting: TB/U antara -3 SD dan -2 SD
   const stuntingCount      = latestPemBalita.filter(p => p.zTBU !== null && p.zTBU < -2 && p.zTBU >= -3).length;
+  // Severely Stunting: TB/U < -3 SD
   const severelyStuntCount = latestPemBalita.filter(p => p.zTBU !== null && p.zTBU < -3).length;
-  const baruBulanIni       = balitaList.filter(b => {
-    const d = new Date(b.createdAt ?? b.tanggalDaftar ?? b.tanggalLahir);
+  // Balita terdaftar bulan ini
+  const baruBulanIni = balitaList.filter(b => {
+    // Gunakan createdAt jika ada, fallback ke tglLahir
+    const raw = b.createdAt ?? b.tglLahir;
+    if (!raw) return false;
+    const d = new Date(raw);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
+  // ── Tren BB per bulan ──
   const trendBB = BULAN.map((bulan, idx) => {
-    const rows = pemBalita.filter(p => new Date(p.tanggal).getMonth() === idx && p.bb != null);
+    const rows = pemBalita.filter(p =>
+      new Date(p.tanggal).getMonth() === idx && p.bb != null
+    );
     const rata = rows.length
       ? parseFloat((rows.reduce((s, p) => s + p.bb, 0) / rows.length).toFixed(1))
       : null;
     return { bulan, rataRata: rata, normal: parseFloat((9.5 + idx * 0.22).toFixed(1)) };
   }).filter(d => d.rataRata !== null);
 
+  // ── Tren TB per bulan ──
   const trendTB = BULAN.map((bulan, idx) => {
-    const rows = pemBalita.filter(p => new Date(p.tanggal).getMonth() === idx && p.tb != null);
+    const rows = pemBalita.filter(p =>
+      new Date(p.tanggal).getMonth() === idx && p.tb != null
+    );
     const rata = rows.length
       ? parseFloat((rows.reduce((s, p) => s + p.tb, 0) / rows.length).toFixed(1))
       : null;
     return { bulan, rataRata: rata, normal: parseFloat((74 + idx * 1.5).toFixed(1)) };
   }).filter(d => d.rataRata !== null);
 
+  // ── Distribusi Status Gizi (Z-score BB/U WHO 2006) ──
   const statusGiziData = (() => {
-    let normal = 0, kurang = 0, buruk = 0, lebih = 0;
+    let normal = 0, kurang = 0, buruk = 0, lebih = 0, noData = 0;
     latestPemBalita.forEach(p => {
-      if (p.zBBU === null) return;
+      if (p.zBBU === null) { noData++; return; }
       if      (p.zBBU < -3) buruk++;
       else if (p.zBBU < -2) kurang++;
       else if (p.zBBU >  2) lebih++;
@@ -247,7 +282,6 @@ export default function DashboardPage() {
   /* ══════════════════════════════════════════
      COMPUTED — LANSIA
   ══════════════════════════════════════════ */
-
   const totalLansia = lansiaList.length;
 
   /** Pemeriksaan terbaru per lansia */
@@ -261,8 +295,8 @@ export default function DashboardPage() {
   const risikoTinggi = latestPemLansia.filter(p =>
     (p.tensi && p.tensi > 140) || (p.gulaDarah && p.gulaDarah > 200)
   ).length;
-  const tensiTinggi  = latestPemLansia.filter(p => p.tensi && p.tensi > 140).length;
-  const kunjLansia   = pemLansia.filter(p => {
+  const tensiTinggi = latestPemLansia.filter(p => p.tensi && p.tensi > 140).length;
+  const kunjLansia  = pemLansia.filter(p => {
     const d = new Date(p.tanggal);
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
@@ -270,15 +304,15 @@ export default function DashboardPage() {
   const withBB     = pemLansia.filter(p => p.bb);
   const withTensi  = pemLansia.filter(p => p.tensi);
   const withGula   = pemLansia.filter(p => p.gulaDarah);
-  const rataaBB    = withBB.length    ? (withBB.reduce((s,p) => s+p.bb, 0) / withBB.length).toFixed(1)              : "-";
-  const rataaTensi = withTensi.length ? (withTensi.reduce((s,p) => s+p.tensi, 0) / withTensi.length).toFixed(0)     : "-";
-  const rataaGula  = withGula.length  ? (withGula.reduce((s,p) => s+p.gulaDarah, 0) / withGula.length).toFixed(0)   : "-";
+  const rataaBB    = withBB.length    ? (withBB.reduce((s,p) => s+p.bb, 0)         / withBB.length).toFixed(1)  : "-";
+  const rataaTensi = withTensi.length ? (withTensi.reduce((s,p) => s+p.tensi, 0)   / withTensi.length).toFixed(0) : "-";
+  const rataaGula  = withGula.length  ? (withGula.reduce((s,p) => s+p.gulaDarah,0) / withGula.length).toFixed(0)  : "-";
 
   const normalLansia = totalLansia - risikoTinggi;
   const statusLansia = [
-    { label:"Normal",                   value:normalLansia, color:"#2d7a4f", bg:"#e8f5ed" },
-    { label:"Risiko Tinggi",            value:risikoTinggi, color:"#be185d", bg:"#fce7f3" },
-    { label:"Tensi Tinggi (>140 mmHg)", value:tensiTinggi,  color:"#d97706", bg:"#fef3c7" },
+    { label:"Normal",                   value:normalLansia, color:"#2d7a4f" },
+    { label:"Risiko Tinggi",            value:risikoTinggi, color:"#be185d" },
+    { label:"Tensi Tinggi (>140 mmHg)", value:tensiTinggi,  color:"#d97706" },
   ];
 
   const trendTensi = BULAN.map((bulan, idx) => {
@@ -334,10 +368,8 @@ export default function DashboardPage() {
         .section-sub {
           font-size: 11px !important;
         }
-      }
-      `
       
-      }</style>
+      `}</style>
 
       {/* ════════════════════════════════════
           SEKSI BALITA
@@ -354,17 +386,11 @@ export default function DashboardPage() {
               <p style={{ fontSize:12, color:"#9aab9a", margin:0 }}>Ringkasan data kesehatan balita</p>
             </div>
           </div>
-          {/* <Link href="/admin/balita" style={{
-            display:"flex", alignItems:"center", gap:5, color:"#2d7a4f", fontSize:13,
-            fontWeight:600, textDecoration:"none", background:"#e8f5ed",
-            padding:"7px 13px", borderRadius:9, border:"1px solid #c6e2d1",
-          }}>
           
-          </Link> */}
         </div>
 
-        {/* Stat cards balita — sesuai tampilan gambar */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:14, marginBottom:16 }}>
+        {/* Stat cards balita */}
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(160px, 1fr))", gap:14, marginBottom:16 }}>
           {[
             { icon:Baby,          label:"Total Balita",      value:totalBalita,        sub:"Terdaftar aktif",         accent:"#2d7a4f", bg:"#e8f5ed" },
             { icon:AlertTriangle, label:"Stunting",          value:stuntingCount,      sub:"Terdeteksi pemeriksaan",  accent:"#d97706", bg:"#fef3c7" },
@@ -389,7 +415,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts BB & TB */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16, marginBottom:16 }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(300px, 1fr))", gap:16, marginBottom:16 }}>
 
           {/* Tren Berat Badan */}
           <div className="card" style={{ padding:20 }}>
@@ -472,7 +498,7 @@ export default function DashboardPage() {
             </div>
           </div>
           {loading ? <LoadingRow color="#2d7a4f" /> : (
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"12px 28px" }}>
+            <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(200px, 1fr))", gap:"12px 28px" }}>
               {statusGiziData.map(({ label, value, color, bg }) => {
                 const total = Math.max(statusGiziData.reduce((s,i) => s+i.value, 0), 1);
                 const pct   = ((value / total) * 100).toFixed(1);
@@ -526,13 +552,7 @@ export default function DashboardPage() {
               <p style={{ fontSize:12, color:"#9aab9a", margin:0 }}>Ringkasan data kesehatan lansia</p>
             </div>
           </div>
-          {/* <Link href="/admin/lansia" style={{
-            display:"flex", alignItems:"center", gap:5, color:"#2563ab", fontSize:13,
-            fontWeight:600, textDecoration:"none", background:"#eaf3fb",
-            padding:"7px 13px", borderRadius:9, border:"1px solid #bfdbfe",
-          }}>
-           
-          </Link> */}
+          
         </div>
 
         {/* Stat cards lansia */}
@@ -561,7 +581,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts tren vital lansia */}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16, marginBottom:16 }}>
+        <div style={{ display:"grid",gridTemplateColumns:"repeat(auto-fit, minmax(280px, 1fr))", gap:16, marginBottom:16 }}>
 
           {/* Tren Tekanan Darah */}
           <div className="card" style={{ padding:20 }}>
@@ -726,94 +746,70 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Lansia risiko tinggi */}
-            <div className="card" style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column" }}>
-
-              {/* Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
-                <div>
-                  <p className="section-title">Lansia perlu perhatian</p>
-                  <p className="section-sub">Tensi &gt;140 mmHg atau gula darah &gt;200 mg/dL</p>
-                </div>
-                {!loading && risikoList.length > 0 && (
-                  <span style={{
-                    background: "#fee2e2", color: "#991f1f",
-                    fontSize: 11, fontWeight: 700,
-                    padding: "3px 10px", borderRadius: 99,
-                  }}>
-                    {latestPemLansia.filter(p =>
-                      (p.tensi && p.tensi > 140) || (p.gulaDarah && p.gulaDarah > 200)
-                    ).length} lansia
-                  </span>
-                )}
-              </div>
-
-              {/* Body */}
+            {/* Lansia perlu perhatian */}
+            <div className="card" style={{ padding:20, flex:1 }}>
+              <p className="section-title">Lansia Perlu Perhatian</p>
+              <p className="section-sub" style={{ marginBottom:14 }}>
+                Tensi &gt;140 mmHg atau gula darah &gt;200 mg/dL
+              </p>
               {loading ? (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center",
-                  flex: 1, padding: "20px 0", gap: 8, color: "#9aab9a" }}>
-                  <div style={{ width: 16, height: 16, border: "2px solid #e4ede6",
-                    borderTopColor: "#2563ab", borderRadius: "50%",
-                    animation: "spin 0.7s linear infinite" }} />
-                  Memuat…
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"center",
+                  padding:"20px 0", gap:8, color:"#9aab9a" }}>
+                  <Spinner color="#2563ab" /> Memuat…
                 </div>
               ) : risikoList.length === 0 ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center",
-                  justifyContent: "center", flex: 1, padding: "24px 0", color: "#9aab9a" }}>
-                  <Heart size={26} color="#dde8de" style={{ marginBottom: 8 }} />
-                  <p style={{ fontSize: 13, margin: 0 }}>Semua lansia dalam kondisi normal</p>
-                </div>
+                <EmptyState icon={Heart} text="Semua lansia dalam kondisi normal" />
               ) : (
-                <div
-                  className="risiko-scroll"
-                  style={{
-                    display: "flex", flexDirection: "column", gap: 8,
-                    maxHeight: 240, overflowY: "auto", paddingRight: 4, flex: 1,
-                  }}
-                >
+                <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                   {risikoList.map(p => {
                     const tensiRisiko = p.tensi     && p.tensi     > 140;
                     const gulaRisiko  = p.gulaDarah && p.gulaDarah > 200;
                     const initials    = (p.lansia?.nama ?? "")
                       .split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() || "??";
                     return (
-                      <div key={p.id} style={{ display: "flex", alignItems: "center", gap: 12,
-                        padding: "10px 12px", background: "#fff5f5",
-                        borderRadius: 10, border: "0.5px solid #fecaca", flexShrink: 0 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#fee2e2",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 11, fontWeight: 700, color: "#991f1f", flexShrink: 0 }}>
+                      <div key={p.id} style={{ display:"flex", alignItems:"center", gap:12,
+                        padding:"10px 12px", background:"#fff5f5", borderRadius:10, border:"1px solid #fecaca" }}>
+                        <div style={{ width:36, height:36, borderRadius:"50%", background:"#fee2e2",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:12, fontWeight:800, color:"#dc2626", flexShrink:0 }}>
                           {initials}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: "#1f2d1f",
-                            margin: "0 0 4px", whiteSpace: "nowrap",
-                            overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <p style={{ fontSize:13, fontWeight:700, color:"#1f2d1f", margin:0,
+                            whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                             {p.lansia?.nama ?? "-"}
                           </p>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                          <div style={{ display:"flex", gap:5, marginTop:4, flexWrap:"wrap" }}>
                             {tensiRisiko && (
-                              <span style={{ background: "#fef3c7", color: "#854F0B",
-                                fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>
+                              <span style={{ background:"#fef3c7", color:"#b45309", fontSize:10,
+                                fontWeight:700, padding:"2px 7px", borderRadius:50 }}>
                                 Tensi: {p.tensi} mmHg
                               </span>
                             )}
                             {gulaRisiko && (
-                              <span style={{ background: "#fee2e2", color: "#791F1F",
-                                fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 99 }}>
+                              <span style={{ background:"#fee2e2", color:"#dc2626", fontSize:10,
+                                fontWeight:700, padding:"2px 7px", borderRadius:50 }}>
                                 Gula: {p.gulaDarah} mg/dL
                               </span>
                             )}
-                            <span style={{ background: "#f0f4fa", color: "#6b7c6b",
-                              fontSize: 10, padding: "2px 8px", borderRadius: 99 }}>
+                            <span style={{ background:"#f0f4fa", color:"#6b7c6b", fontSize:10,
+                              fontWeight:600, padding:"2px 7px", borderRadius:50 }}>
                               {new Date(p.tanggal).toLocaleDateString("id-ID",
-                                { day: "numeric", month: "short", year: "numeric" })}
+                                { day:"numeric", month:"short", year:"numeric" })}
                             </span>
                           </div>
                         </div>
                       </div>
                     );
                   })}
+                  {latestPemLansia.filter(p =>
+                    (p.tensi && p.tensi > 140) || (p.gulaDarah && p.gulaDarah > 200)
+                  ).length > 4 && (
+                    <Link href="/admin/lansia" style={{ fontSize:12, color:"#2563ab", fontWeight:600,
+                      textDecoration:"none", textAlign:"center", padding:"6px 0", display:"block" }}>
+                      Lihat semua lansia berisiko →
+                    </Link>
+                  )}
                 </div>
               )}
             </div>
