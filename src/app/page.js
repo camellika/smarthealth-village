@@ -997,7 +997,7 @@ export default function Home() {
             <div>
               <h4 style={{ color: "#e8f5ed", fontSize: 14, marginBottom: 10 }}>Kontak</h4>
               {[
-                { icon: MapPin, text: "Jalan Raya, Dusun I, Panembangan, Cilongok, Banyumas" },
+                { icon: MapPin, text: "Jl.Nirasari RT 02 RW 03 Teluk Purwokerto Selatan" },
                 { icon: Phone, text: "+62 812-3456-7890" },
                 { icon: Mail, text: "info@smarthealthvillage.id" },
               ].map(({ icon: Icon, text }) => (
