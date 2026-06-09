@@ -612,7 +612,7 @@ export default function Home() {
           <div>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#e8f5ed", border: "1px solid #b8ddc5", borderRadius: 50, padding: "6px 14px", marginBottom: 22 }}>
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2d7a4f", animation: "pulse-dot 2s ease-in-out infinite" }} />
-              <span style={{ color: "#2d7a4f", fontSize: 13, fontWeight: 600 }}>Sistem Informasi · Desa Panembangan</span>
+              <span style={{ color: "#2d7a4f", fontSize: 13, fontWeight: 600 }}>Sistem Informasi · Kelurahan Teluk</span>
             </div>
             <h1 className="hero-title">Sistem Monitoring<br /><span style={{ color: "#2d7a4f" }}>Kesehatan Desa</span></h1>
             <p style={{ color: "#5a7060", lineHeight: 1.75, marginTop: 18, fontSize: 15.5, maxWidth: 440, animation: "slide-up 0.7s 0.1s ease both", opacity: 0, animationFillMode: "forwards" }}>

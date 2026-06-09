@@ -381,9 +381,9 @@ export default function LaporanPage() {
         <div class="kop">
           <img src="${logoUrl}" alt="Logo Desa" onerror="this.style.display='none'" />
           <div class="kop-center">
-            <p class="kop-instansi">Pemerintah Desa</p>
-            <p class="kop-nama">NAMA DESA ANDA</p>
-            <p class="kop-alamat">Jl. Nama Jalan No. XX, Kecamatan ..., Kabupaten ..., Provinsi ... · Kode Pos XXXXX</p>
+            <p class="kop-instansi">Pemerintah Kelurahan</p>
+            <p class="kop-nama">TELUK</p>
+            <p class="kop-alamat">Jl.Nirasari RT 02 RW 03 Teluk Purwokerto Selatan</p>
           </div>
           <div class="kop-right"></div>
         </div>

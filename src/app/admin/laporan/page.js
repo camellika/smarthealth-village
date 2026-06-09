@@ -408,9 +408,9 @@ export default function LaporanPage() {
         <div class="kop">
           <img src="${logoUrl}" alt="Logo Desa" onerror="this.style.display='none'" />
           <div class="kop-center">
-            <p class="kop-instansi">Pemerintah Desa</p>
-            <p class="kop-nama">PANEMBANGAN</p>
-            <p class="kop-alamat">Jalan Raya, Dusun I, Panembangan, Cilongok, Kabupaten Banyumas, Kode pos 53162</p>
+            <p class="kop-instansi">Pemerintah Kelurahan</p>
+            <p class="kop-nama">TELUK</p>
+            <p class="kop-alamat">Jl.Nirasari RT 02 RW 03 Teluk Purwokerto Selatan</p>
           </div>
           <div class="kop-right"></div>
         </div>
